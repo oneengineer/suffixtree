@@ -1,0 +1,10 @@
+.vs
+x64/
+SuffixTree/x64
+SuffixTreePyBinding/x64
+TestSuffixTree/x64
+TestSuffixTree/*.bin
+
+*.swp
+linux/*
+!linux/Makefile
