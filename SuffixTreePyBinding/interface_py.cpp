@@ -14,6 +14,7 @@
 
 #include <Python.h>
 #include <iostream>
+#include <sstream>
 #include "SuffixQueryTree.h"
 
 using namespace std;
@@ -164,7 +165,6 @@ extern "C" MYDLL PyObject * findStringIdx_qtreePy(PyObject * qtree_capsule, PyOb
 */
 extern "C" MYDLL PyObject * findString_qtreePy(PyObject * qtree_capsule, PyObject *pys) {
 	auto *tree = PyCapsule_GetPointer(qtree_capsule, "SuffixQueryTree");
-
 	string s = pyString_toString(pys);
 	auto state = PyGILState_Ensure();
 	try {
@@ -201,10 +201,37 @@ extern "C" MYDLL PyObject * cacheIntermediateNodePy(PyObject * qtree_capsule, do
 	return PyUnicode_FromString(s.c_str());
 }
 
-
-
-extern "C" MYDLL int add1(int a) {
-	PyErr_SetString(PyExc_ValueError, "ssss");
-	return 0;
-	return a + 1;
+extern "C" MYDLL void saveSuffixQueryTreeToFilePy(PyObject * qtree_capsule, const char *path) {
+	auto *p = PyCapsule_GetPointer(qtree_capsule, "SuffixQueryTree");
+	saveSuffixQueryTreeToFile(p, path);
 }
+
+extern "C" MYDLL PyObject * saveSuffixQueryTreePy(PyObject * qtree_capsule) {
+	auto *p = PyCapsule_GetPointer(qtree_capsule, "SuffixQueryTree");
+	ostringstream ss(ostream::binary | ostream::out) ;
+	saveSuffixQueryTree(p, ss);
+	auto  s = ss.str();
+	return PyBytes_FromStringAndSize(s.c_str(), s.length());
+}
+
+extern "C" MYDLL PyObject * readSuffixQueryTreeFromFilePy(const char *path) {
+	auto *p_qtree = emptySuffixQueryTreePointer();
+	readSuffixQueryTreeFromFile(p_qtree, path);
+	return PyCapsule_New((void *)p_qtree, "SuffixQueryTree", deconstructSuffixQueryTree);
+}
+
+extern "C" MYDLL PyObject * readSuffixQueryTreePy(PyObject* pybytes) {
+	auto *p_qtree = emptySuffixQueryTreePointer();
+	char *c_str ;
+	Py_ssize_t c_str_len;
+	PyBytes_AsStringAndSize(pybytes, &c_str, &c_str_len);
+	int len = (int)c_str_len;
+	string s(c_str, len);
+
+	istringstream ss(s, istream::binary | istream::in);
+	readSuffixQueryTree(p_qtree, ss);
+	return PyCapsule_New((void *)p_qtree, "SuffixQueryTree", deconstructSuffixQueryTree);
+}
+
+
+

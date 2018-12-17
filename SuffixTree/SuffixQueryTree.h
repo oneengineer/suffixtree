@@ -242,8 +242,6 @@ public:
 
 	void deserialize(istream & i) {
 
-		
-
 		SerializationUtil::byteread(i, preserveString);
 		SerializationUtil::byteread(i, strNum);
 		SerializationUtil::byteread(i, threshold);
@@ -271,7 +269,7 @@ public:
 		ifstream i;
 		i.open(path, ifstream::in | ifstream::binary);
 		if (!i) {
-			cout << "cannot open" << endl;
+			throw runtime_error(string("cannot open ") + string(path));
 			return;
 		}
 		this->deserialize(i);
@@ -322,11 +320,13 @@ public:
 		vector<int> result;
 		int pos = 0; //make it at root
 		int edgeLen = 0;
+
 		for (auto ch0 : s) {
 			int ch = (int)ch0;
 			QTreeNode & node = nodes[pos];
 			//1. end of current edge, check edge go to next node,
 			//2. in the middle of an edge, the last char should be leaf
+
 			if (edgeLen == node.lengthStr || pos == 0) {
 				if (node.isLeaf()) return result;
 				int childpos = findChildren(node,ch);

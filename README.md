@@ -54,10 +54,30 @@ print(idx)
 SuffixQueryTree can be serialized and deserialized to/from a file a bytes object.
 For example:
 
- ```
-# do not preserve string
-qtree = SuffixQueryTree(False,["abc","abcd","123","321"])
-idx = qtree.findStringIdx("abc") # you cannot use findString now
-print(idx)
+```
+from suffixtree import *
+
+qtree = SuffixQueryTree(True,["abc","abcd","123","321"])
+path = "snapshot.bin"
+qtree.serialize(path)
+qtree2 = SuffixQueryTree(True)
+qtree2.deserialize(path)
+idx = qtree.findString("abc") 
+idx2 = qtree2.findString("abc")
+print(idx,idx2)
+
+# it is also possible to serialize the object as a bytes object
+
+qtree = SuffixQueryTree(True,["abc","abcd","123","321"])
+path = "snapshot.bin"
+data = qtree.serialize()
+
+print(type(data),len(data)) # bytes, length of bytes
+
+qtree2 = SuffixQueryTree(True)
+qtree2.deserialize(data)
+idx = qtree.findString("abc") 
+idx2 = qtree2.findString("abc")
+print(idx,idx2)
 ```
 

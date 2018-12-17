@@ -17,6 +17,9 @@ void* createSuffixTreePointer(vector<string> strs, bool persistString);
 //(QSuffixTree*)     (SuffixTree*)
 void* createSuffixQueryTreePointer(const void * suffixtree);
 
+//(QSuffixTree*) 
+void * emptySuffixQueryTreePointer();
+
 //QSuffixTree *
 void cacheIntermediateNodeDefault(void* qtree);
 
@@ -43,5 +46,12 @@ void suffixTreeAddString(void * tree, string str);
 
 void freeSuffixTreePointer(void * tree);
 void freeSuffixQueryTreePointer(void * tree);
+
+void saveSuffixQueryTreeToFile(void * p, const char *path);
+void saveSuffixQueryTree(void * p, ostream & o);
+
+void readSuffixQueryTreeFromFile(void * p, const char *path);
+void readSuffixQueryTree(void * p, istream & i);
+
 
 

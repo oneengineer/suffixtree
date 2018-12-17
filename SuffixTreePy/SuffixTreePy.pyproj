@@ -12,6 +12,8 @@
     <OutputPath>.</OutputPath>
     <Name>SuffixTreePy</Name>
     <RootNamespace>SuffixTreePy</RootNamespace>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <EnableNativeCodeDebugging>True</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -25,12 +27,22 @@
     <Folder Include="suffixtree\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="a.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="setup.py" />
     <Compile Include="suffixtree\SuffixTree.py" />
     <Compile Include="suffixtree\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SuffixTreePyBinding\SuffixTreePyBinding.vcxproj">
+      <Name>SuffixTreePyBinding</Name>
+      <Project>{5f15181e-6627-412b-91e9-7a28e51d08a8}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

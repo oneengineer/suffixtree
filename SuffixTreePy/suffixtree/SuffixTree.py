@@ -2,7 +2,8 @@ from ctypes import *
 import os
 
 if os.name == 'nt':
-    dllpath = os.path.dirname(os.path.abspath(__file__)) + "/SuffixTreePyBinding.dll"
+    #dllpath = os.path.dirname(os.path.abspath(__file__)) + "/SuffixTreePyBinding.dll"
+    dllpath = r"C:\work\cpp\suffixtree\x64\Release" + "/SuffixTreePyBinding.dll"
 else:
     dllpath = os.path.dirname(os.path.abspath(__file__)) + "/libSuffixTreePyBinding.so"
 
@@ -28,12 +29,43 @@ class SuffixQueryTree(object):
         lib.cacheIntermediateNodePy.argtypes = [ py_object, c_double, c_double ] # tree_capsule, budgetRatio, sampleRate
         lib.cacheIntermediateNodePy.restype = py_object # list string
 
+        #----------------------- serialize and deserialize ----------------
+
+        lib.saveSuffixQueryTreeToFilePy.argtypes = [ py_object, c_char_p ]  # tree_capsule, path
+
+        lib.saveSuffixQueryTreePy.argtypes = [ py_object ] # tree_capsule, path
+        lib.saveSuffixQueryTreePy.restype = py_object # bytes
+
+        lib.readSuffixQueryTreeFromFilePy.argtypes = [ c_char_p ]  # path
+        lib.readSuffixQueryTreeFromFilePy.restype = py_object #tree_capsule
+
+        lib.readSuffixQueryTreePy.argtypes = [ py_object ]  # bytes
+        lib.readSuffixQueryTreePy.restype = py_object #tree_capsule
+
         self.lib = lib
         self.pylib = pylib
         self.preserveString = preserveString
         self.c_qtree = None
         if strs is not None:
             self.initStrings(strs)
+
+    def serialize(self,path = None):
+        if path is None:
+            return self.lib.saveSuffixQueryTreePy(self.c_qtree)
+        else:
+            path = path.encode('utf-8')
+            self.lib.saveSuffixQueryTreeToFilePy(self.c_qtree, path)
+
+    def deserialize(self,content = None):
+        if type(content) == bytes:
+            self.c_qtree = self.lib.readSuffixQueryTreePy(content)
+        elif type(content) == str:
+            content = content.encode('utf-8')
+            self.c_qtree = self.lib.readSuffixQueryTreeFromFilePy(content)
+        else:
+            raise Exception("content has to be either a string or bytes")
+        #TODO modify python side preserveString
+
 
     def findStringIdx(self,s:str):
         return self.lib.findStringIdx_qtreePy(self.c_qtree,s)
@@ -104,3 +136,4 @@ class SuffixTree(object):
 
     def findString(self,s:str):
         return self.pylib.findStringPy(self.c_tree,s)
+

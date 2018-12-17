@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include "SuffixTree.h"
 #include "SuffixQueryTree.h"
 
@@ -20,6 +21,12 @@ void * createSuffixQueryTreePointer(const void * p) {
 	QSuffixTree* qtree = new QSuffixTree(move(suffixtree.queryTree()));
 	return (void *)qtree;
 }
+
+void * emptySuffixQueryTreePointer() {
+	QSuffixTree * tree = new QSuffixTree ();
+	return (void *)tree;
+}
+
 
 void cacheIntermediateNode(void * p, double budgetRatio, double sampleRate) {
 	auto & qtree = *(QSuffixTree*)p;
@@ -83,6 +90,23 @@ void freeSuffixQueryTreePointer(void * p) {
 }
 
 
- int add10(int a) {
-	return a + 10;
+void saveSuffixQueryTreeToFile(void * p, const char *path) {
+	QSuffixTree * tree = (QSuffixTree *)p;
+	tree->serializeToFile(path);
 }
+
+void saveSuffixQueryTree(void * p, ostream & o) {
+	QSuffixTree * tree = (QSuffixTree *)p;
+	tree->serialize(o);
+}
+
+void readSuffixQueryTreeFromFile(void * p, const char *path) {
+	QSuffixTree * tree = (QSuffixTree *)p;
+	tree->deserializeFromFile(path);
+}
+
+void readSuffixQueryTree(void * p, istream & i) {
+	QSuffixTree * tree = (QSuffixTree *)p;
+	tree->deserialize(i);
+}
+
