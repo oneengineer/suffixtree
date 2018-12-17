@@ -37,7 +37,7 @@ cmdclass={
 
 
 setup(
-    name="suffixtree",
+    name="csuffixtree",
     version="0.1.0",
     author="oneengineer",
     author_email="oneengineer@gmail.com",
