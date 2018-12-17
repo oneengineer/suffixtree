@@ -1,24 +1,24 @@
-#Introduction
+# Introduction
 This is a Suffix Tree data structure lib implemented in C++, wrapped with python.
 
 Expect for contructing the tree, this lib also provides to construct the query tree for speeding up querying strings.
 
-#Install and Build
-###Install from Pypi
+# Install and Build
+### Install from Pypi
 
 run `pip install csuffixtree`
 
-###Build
+### Build
 You can build this either on linux or windows.
 
 
-###Install Python Package
+### Install Python Package
 
 1. Build SuffixTreePyBinding solution in Windows
 2. On linux you should go to `linux` directory, and run `make python` 
 3. under SuffixTreePy directory. run `python setup.py install`
 
-#How to use
+# How to use
 
 You can construct a suffix tree in the following way.
 ```
@@ -50,7 +50,7 @@ idx = qtree.findStringIdx("abc") # you cannot use findString now
 print(idx)
 ```
 
-###Serialization 
+### Serialization 
 SuffixQueryTree can be serialized and deserialized to/from a file a bytes object.
 For example:
 
