@@ -8,3 +8,5 @@ TestSuffixTree/*.bin
 *.swp
 linux/*
 !linux/Makefile
+
+__pycache__

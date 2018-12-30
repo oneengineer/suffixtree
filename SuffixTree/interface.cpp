@@ -6,9 +6,14 @@
 #include <fstream>
 #include "SuffixTree.h"
 #include "SuffixQueryTree.h"
+#include "common.h"
 
 using namespace std;
 
+const int CHAR_ANY = numeric_limits<int>::max() - 1; //.
+const int CHAR_WORD = numeric_limits<int>::max() - 2; // \w
+const int CHAR_STRING_START = numeric_limits<int>::max() - 3; // ^
+const int CHAR_STRING_END = numeric_limits<int>::max() - 4; // $
 
 void * createSuffixTreePointer(vector<string> strs, bool persistString) {
 	SuffixTree* tree = new SuffixTree(persistString);
@@ -110,3 +115,20 @@ void readSuffixQueryTree(void * p, istream & i) {
 	tree->deserialize(i);
 }
 
+vector<int> findStringIdx_QTree_wildcard(void * qtree, const vector<Charset> & s) {
+	QSuffixTree * tree = (QSuffixTree *)qtree;
+	return tree->findSubStringIdx_wildCard(s);
+}
+vector<string> findString_QTree_wildcard(void * qtree, const vector<Charset> & s) {
+	QSuffixTree * tree = (QSuffixTree *)qtree;
+	return tree->findSubString_wildCard(s);
+}
+
+vector<string> allString_SuffixQueryTree(void * qtree) {
+	QSuffixTree * tree = (QSuffixTree *)qtree;
+	return tree->getStrings();
+}
+vector<string> allString_SuffixTree(void * tree) {
+	SuffixTree * p = (SuffixTree *)tree;
+	return p->getStrings();
+}

@@ -15,7 +15,6 @@
 #include <Python.h>
 #include <iostream>
 #include <sstream>
-#include "SuffixQueryTree.h"
 
 using namespace std;
 
@@ -233,5 +232,85 @@ extern "C" MYDLL PyObject * readSuffixQueryTreePy(PyObject* pybytes) {
 	return PyCapsule_New((void *)p_qtree, "SuffixQueryTree", deconstructSuffixQueryTree);
 }
 
+vector<Charset> translateList(PyObject *list_charset) {
+	vector<Charset> chars;
+	auto lLen = PySequence_Length(list_charset);
+	PyGILState_STATE state = PyGILState_Ensure();
 
+	chars.reserve((int)lLen);
+	for (int i = 0; i < (int)lLen; i++) {
+		auto *obj = PySequence_GetItem(list_charset, i);
+		// turn obj to string
 
+		if (PyNumber_Check(obj) == 1) { // is a number
+			auto && c = Charset();
+			int number = (int)PyLong_AsLong(obj);
+			//Did not check error
+			if (number == (int)'^')
+				c.specialChar = CHAR_STRING_START;
+			else if (number == (int)'$')
+				c.specialChar = CHAR_STRING_END;
+			else if (number == (int)'.')
+				c.specialChar = CHAR_ANY;
+			else if (number == (int)'w')
+				c.specialChar = CHAR_WORD;
+			else {
+				//TODO add number in string
+				PyErr_SetString(PyExc_RuntimeError, "unknown number ");
+			}
+			chars.push_back(c);
+		}
+		else {
+			string s = pyString_toString(obj);
+			vector<int> ints;
+			for (auto & ch: s) {
+				ints.push_back((int)ch);
+			}
+			auto && c = Charset(set<int>(ints.begin(), ints.end()));
+			chars.push_back(c);
+		}
+		Py_DECREF(obj);
+	}
+	PyGILState_Release(state);
+
+	return chars;
+}
+
+//list_charset is a list of string or int, int is considered to be special char
+extern "C" MYDLL PyObject * findString_QTree_wildcardPy(PyObject * tree_capsule, PyObject *list_charset) {
+	auto *qtree = PyCapsule_GetPointer(tree_capsule, "SuffixQueryTree");
+	vector<Charset> chars;
+	chars = translateList(list_charset);
+	PyGILState_STATE state = PyGILState_Ensure();
+	try {
+		auto strs = findString_QTree_wildcard(qtree, chars);
+		PyGILState_Release(state);
+		return vectorString_toPyList(strs);
+	}
+	catch (std::exception e) {
+		PyErr_SetString(PyExc_RuntimeError, e.what());
+		PyGILState_Release(state);
+		return NULL;
+	}
+}
+
+//list_charset is a list of list_string, list_string is used for representing charset
+extern "C" MYDLL PyObject * findStringIdx_QTree_wildcardPy(PyObject * tree_capsule, PyObject *list_charset) {
+	auto *qtree = PyCapsule_GetPointer(tree_capsule, "SuffixQueryTree");
+	vector<Charset> chars;
+	chars = translateList(list_charset);
+	auto idx = findStringIdx_QTree_wildcard(qtree, chars);
+	return vectorInt_toPyList(idx);
+}
+
+extern "C" MYDLL PyObject * allString_SuffixTreePy(PyObject * tree_capsule) {
+	auto *tree = PyCapsule_GetPointer(tree_capsule, "SuffixTree");
+	auto strs = allString_SuffixTree(tree);
+	return vectorString_toPyList(strs);
+}
+
+extern "C" MYDLL PyObject * allString_SuffixQueryTreePy(PyObject * qtree_capsule) {
+	auto *qtree = PyCapsule_GetPointer(qtree_capsule, "SuffixQueryTree");
+	auto strs = allString_SuffixQueryTree(qtree);
+	return vectorString_toPyList(strs);
+}

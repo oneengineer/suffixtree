@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include "common.h"
 
 using namespace std;
 
@@ -40,6 +41,9 @@ vector<string> findString(void * tree, string s);
 vector<int> findStringIdx_QTree(void * qtree, string s);
 vector<string> findString_QTree(void * qtree, string s);
 
+vector<int> findStringIdx_QTree_wildcard(void * qtree, const vector<Charset> & s);
+vector<string> findString_QTree_wildcard(void * qtree, const vector<Charset> & s);
+
 
 void suffixTreeAddStrings(void * tree, vector<string> strs);
 void suffixTreeAddString(void * tree, string str);
@@ -53,5 +57,5 @@ void saveSuffixQueryTree(void * p, ostream & o);
 void readSuffixQueryTreeFromFile(void * p, const char *path);
 void readSuffixQueryTree(void * p, istream & i);
 
-
-
+vector<string> allString_SuffixQueryTree(void * qtree);
+vector<string> allString_SuffixTree(void * tree);

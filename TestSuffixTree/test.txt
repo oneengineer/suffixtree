@@ -7,4 +7,11 @@ aabbcdeabc
 123321
 hhhzzzzww
 ttbb
+ab1
+12b
+11
+12x
+12
+31
+a1a
 wwwr

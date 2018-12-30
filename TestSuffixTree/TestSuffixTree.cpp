@@ -1,4 +1,3 @@
-// st.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 #include "pch.h"
 #include <iostream>
@@ -91,12 +90,104 @@ void benchmark() {
 
 	//}
 
-	char ch;
-	cin >> ch;
 	cout << "done" << endl;
 
 }
 
+
+
+void test_findStr_wildcard() {
+
+	SuffixTree *st = new SuffixTree(true);
+	vector<string> strs;
+	std::ifstream file("test.txt");
+	std::string str;
+	cout << "started " << endl;
+	int c = 0;
+	while (std::getline(file, str))
+	{
+		strs.push_back(str);
+		c += 1;
+		//if (c > 100000) break;
+	}
+	cout << "finished reading " << strs.size() << endl;
+	file.close();
+	//cout << qtree.histogramNodeCounting();
+	st->addStrings(strs);
+	auto t = st->queryTree();
+	t.cacheIntermediateNode(1.5);
+
+	auto c_ab = Charset({ (int)'a', (int)'b' });
+	auto c_1 = Charset({ (int)'1'});
+	auto c_12 = Charset({ (int)'1', (int)'2' });
+
+	auto c_c = Charset({ (int)'c' });
+	auto c_any = Charset(); c_any.specialChar = CHAR_ANY;
+	auto c_digit = Charset();
+	auto c_start = Charset(); c_start.specialChar = CHAR_STRING_START;
+	auto c_end = Charset(); c_end.specialChar = CHAR_STRING_END;
+
+	for (int i = 0; i < 10; i++) {
+		c_digit.chars.insert((int)'0' + i);
+	}
+
+	vector<Charset> v0 = { c_ab,c_digit };
+	vector<Charset> v1 = {c_ab,c_c};
+	vector<Charset> v2 = { c_any,c_c };
+	vector<Charset> v3 = { c_any,c_digit };
+	vector<Charset> v4 = { c_any,c_digit };
+	vector<Charset> v5 = { c_start,c_digit,c_digit };
+	vector<Charset> v6 = { c_start,c_any,c_any,c_digit,c_end };
+	vector<Charset> v7 = { c_digit,c_any,c_ab,c_end };
+	vector<Charset> v8 = { c_1,c_12,c_end };
+
+	vector<vector<Charset>> vs = { v0,v1,v2,v3,v4,v5,v6,v7,v8 };
+	for (int i = 0; i < vs.size(); i++) {
+		auto & v = vs[i];
+		auto results = t.findSubString_wildCard(v);
+		cout << "to find ith element " << i << endl;
+		for (auto x : results) {
+			cout << "\t Found: " << x << endl;
+		}
+	}
+
+
+	cout << "done" << endl;
+
+}
+
+
+void test() {
+	SuffixTree st(false);
+	set<string> strs;
+	const int len = 4;
+	int n = 20;
+
+	const int len_test = 2;
+	int n_test = 4;
+
+	vector<string> data;
+	for (int i = 0; i < n; i++) {
+		strs.insert(randStr<len>());
+	}
+
+	for (auto i : strs) {
+		cout << "put string  " << i << endl;
+		data.push_back(i);
+		st.addString(i);
+	}
+
+	cout << "-------------------------" << endl;
+
+	for (int i = 0; i < n; i++) {
+		auto temp = randStr<len_test>();
+		cout << "To sub " << temp << endl;
+		auto result = st.findSubStringIdx(temp);
+		for (auto j : result) {
+			cout << "\t get: " << data[j] << endl;
+		}
+	}
+}
 
 void benchmark_QSuffixTree() {
 	SuffixTree *st = new SuffixTree(true);
@@ -192,39 +283,6 @@ void benchmark_QSuffixTree() {
 }
 
 
-void test() {
-	SuffixTree st(false);
-	set<string> strs;
-	const int len = 4;
-	int n = 20;
-
-	const int len_test = 2;
-	int n_test = 4;
-
-	vector<string> data;
-	for (int i = 0; i < n; i++) {
-		strs.insert(randStr<len>());
-	}
-
-	for (auto i : strs) {
-		cout << "put string  " << i << endl;
-		data.push_back(i);
-		st.addString(i);
-	}
-
-	cout << "-------------------------" << endl;
-
-	for (int i = 0; i < n; i++) {
-		auto temp = randStr<len_test>();
-		cout << "To sub " << temp << endl;
-		auto result = st.findSubStringIdx(temp);
-		for (auto j : result) {
-			cout << "\t get: " << data[j] << endl;
-		}
-	}
-}
-
-
 
 
 int main()
@@ -232,7 +290,8 @@ int main()
 	srand(time(NULL));   // Initialization, should only be called once.
 
 	//benchmark();
-	benchmark_QSuffixTree();
+	//benchmark_QSuffixTree();
+	test_findStr_wildcard();
 
 
 	//test();

@@ -21,14 +21,18 @@
 
 #include <memory>
 #include <functional>
+#include <limits>
 
 #include <cmath>
+#include <deque>
+#include "common.h"
 
 using namespace std;
 
+
 class SerializationUtil {
 public:
-	template<typename T> 
+	template<typename T>
 	static inline void bytewrite(ostream & o, T & t) {
 		o.write((const char *)&t, sizeof(T));
 	}
@@ -36,7 +40,7 @@ public:
 	static inline void bytewrite(ostream & o, string & t) {
 		int size = (int)t.size() + 1;
 		bytewrite(o, size);
-		o.write(t.c_str(), sizeof(char) * size );
+		o.write(t.c_str(), sizeof(char) * size);
 	}
 
 	template<typename T>
@@ -91,7 +95,7 @@ public:
 		for (int j = 0; j < size; j++) {
 			T t;
 			//t.deserialize(i);
-			byteread(i,t);
+			byteread(i, t);
 			v.push_back(t);
 		}
 	}
@@ -104,12 +108,12 @@ public:
 	int childrenIdx;
 	unsigned int lengthChildren;
 
-	QTreeNode(){}
+	QTreeNode() {}
 
-	QTreeNode(const int & start, const int & end, 
-		const int & childrenIdx, const int & lengthChildren):
-			start(start), lengthStr(end - start), 
-			childrenIdx(childrenIdx), lengthChildren(lengthChildren){}
+	QTreeNode(const int & start, const int & end,
+		const int & childrenIdx, const int & lengthChildren) :
+		start(start), lengthStr(end - start),
+		childrenIdx(childrenIdx), lengthChildren(lengthChildren) {}
 	inline bool isLeaf() const {
 		return lengthChildren < 1;
 	}
@@ -118,7 +122,7 @@ public:
 		return start + lengthStr;
 	}
 
-	inline void serialize( ostream & o) const {
+	inline void serialize(ostream & o) const {
 		SerializationUtil::bytewrite(o, start);
 		SerializationUtil::bytewrite(o, lengthStr);
 		SerializationUtil::bytewrite(o, childrenIdx);
@@ -134,14 +138,14 @@ public:
 
 };
 
-class QChildren{ //store info of node
+class QChildren { //store info of node
 public:
 	int ch;
 	int pos;
 
 	QChildren() {}
 
-	QChildren(const int & ch, const int & pos):ch(ch), pos(pos){}
+	QChildren(const int & ch, const int & pos) :ch(ch), pos(pos) {}
 
 	inline void serialize(ostream & o) const {
 		SerializationUtil::bytewrite(o, ch);
@@ -157,7 +161,7 @@ public:
 class QCountingNode { //store info of node as well as string under it.
 public:
 
-	int strNum ;
+	int strNum;
 
 	vector<int> * strSet_p = NULL;
 
@@ -166,7 +170,7 @@ public:
 	}
 
 	inline void strSet(set<int> s) {
-		strSet_p = new vector<int>(s.begin(),s.end());
+		strSet_p = new vector<int>(s.begin(), s.end());
 	}
 
 	inline void serialize(ostream & o) const {
@@ -210,17 +214,17 @@ public:
 
 	bool preserveString;
 	int strNum;
-	double threshold ;
+	double threshold;
 	double budget = -1.0;
 	double sample_rate = 0.01;
 	int leafNodesNum;
 
 	QSuffixTree() {}
 
-	QSuffixTree(int strNum,bool preserveString):strNum(strNum),preserveString(preserveString) {}
+	QSuffixTree(int strNum, bool preserveString) :strNum(strNum), preserveString(preserveString) {}
 
 	void serialize(ostream & o) {
-		
+
 
 		SerializationUtil::bytewrite(o, preserveString);
 		SerializationUtil::bytewrite(o, strNum);
@@ -233,7 +237,7 @@ public:
 		SerializationUtil::serializeVector(o, theString);
 		SerializationUtil::serializeVector(o, strs);
 
-		SerializationUtil::serializeStruct(o ,nodes);
+		SerializationUtil::serializeStruct(o, nodes);
 		SerializationUtil::serializeStruct(o, children);
 
 		SerializationUtil::serializeStruct(o, cnodes);
@@ -260,7 +264,7 @@ public:
 	}
 
 	void serializeToFile(const char * path) {
-		ofstream o(path,ofstream::out | ofstream ::binary);
+		ofstream o(path, ofstream::out | ofstream::binary);
 		this->serialize(o);
 		o.close();
 	}
@@ -276,7 +280,7 @@ public:
 		i.close();
 	}
 
-	int findChildren(const QTreeNode & node, int ch) {
+	int findChildren(const QTreeNode & node, int ch) const {
 		auto begin = children.begin() + node.childrenIdx;
 		auto end = begin + node.lengthChildren;
 		auto result = lower_bound(begin, end, ch, [](const QChildren & a, const int ch) {
@@ -303,7 +307,7 @@ public:
 			}
 		}
 
-		if (node.isLeaf() ) { 
+		if (node.isLeaf()) {
 			int lastch = theString[node.end() - 1];
 			s.insert((-lastch) - 1); //make negative to positive and index starts from 0
 			return;
@@ -313,6 +317,107 @@ public:
 		for (auto i = begin; i != end; i++) {
 			traverseAdd<withCache>(s, i->pos);
 		}
+	}
+
+	vector<int> edgeIntersect_wildCard(const QTreeNode & node, const Charset & ch) const {
+		vector<int> result;
+		if (ch.specialChar != 0) {
+			for (auto i = node.childrenIdx; i < node.childrenIdx + (int)node.lengthChildren; i++) {
+				if (ch.match(children[i].ch))
+					result.push_back(i);
+			}
+		}
+		else {
+			for (const auto & c : ch.chars) {
+				int childpos = findChildren(node, c);
+				if (childpos >= 0) result.push_back(childpos);
+			}
+		}
+		return result;
+	}
+
+	vector<string> getStrings() const {
+		if (this->preserveString) return this->strs;
+		// reconstruct strings from theString;
+		vector<string> result;
+		string str;
+		for (const int & ch : theString) {
+			if (ch == CHAR_STRING_START) continue;
+			if (ch < 0) {// the end of a string
+				result.push_back(str);
+				str.clear();
+				continue;
+			}
+			char ch0 = (char)ch;
+			str.push_back(ch0);
+		}
+		return result;
+	}
+
+	vector<int> findSubStringIdx_wildCard(const vector<Charset> & chars) {
+		set<int> resultset;
+		vector<int> result;
+		int pos = 0; //make it at root
+		int edgeLen = 0;
+
+		deque<int> q_pos;
+		deque<int> q_len;
+		deque<int> q_chidx;
+		q_pos.push_back(pos);
+		q_len.push_back(edgeLen);
+		q_chidx.push_back(0);
+
+		vector<int> posSeq;
+
+		while (q_pos.size() > 0) {
+			pos = q_pos.front(); q_pos.pop_front();
+			edgeLen = q_len.front(); q_len.pop_front();
+			int chidx = q_chidx.front(); q_chidx.pop_front();
+
+			if (chidx >= chars.size()) {
+				// stop situation
+				posSeq.push_back(pos);
+				continue;
+			}
+
+			const auto & ch0 = chars[chidx];
+			QTreeNode & node = nodes[pos];
+			//1. end of current edge, check edge go to next node,
+			//2. in the middle of an edge, the last char should be leaf
+
+			if (edgeLen == node.lengthStr || pos == 0) {
+				if (node.isLeaf()) continue;
+				// loop all possible edges from the node
+				auto intersect = edgeIntersect_wildCard(node, ch0);
+				for (auto childpos : intersect) {
+					q_pos.push_back(children[childpos].pos);
+					q_len.push_back(1);
+					q_chidx.push_back(chidx + 1);
+				}
+			}
+			else {
+				auto chcmp = theString[node.start + edgeLen];
+				if (ch0.match(chcmp)) {
+					// the front has already been pop out, need to push back, this time push it to front
+					edgeLen += 1;
+					q_pos.push_front(pos);
+					q_len.push_front(edgeLen);
+					q_chidx.push_front(chidx + 1);
+				}
+			}
+		}
+		//cout << " at node children: " << nodes[pos].lengthChildren << " " << nodes[pos].lengthStr << endl;
+
+		for (auto pos : posSeq) {
+			if (this->withCache) {
+				traverseAdd<true>(resultset, pos);
+			}
+			else {
+				traverseAdd<false>(resultset, pos);
+			}
+		}
+		result.insert(result.begin(), resultset.begin(), resultset.end());
+		return result;
 	}
 
 	vector<int> findSubStringIdx(const string & s) {
@@ -329,7 +434,7 @@ public:
 
 			if (edgeLen == node.lengthStr || pos == 0) {
 				if (node.isLeaf()) return result;
-				int childpos = findChildren(node,ch);
+				int childpos = findChildren(node, ch);
 				if (childpos < 0) return result;
 				pos = children[childpos].pos;
 				edgeLen = 1;
@@ -357,6 +462,19 @@ public:
 		return result;
 	}
 
+
+	vector<string> findSubString_wildCard(const vector<Charset> & chars) {
+		if (!preserveString) {
+			throw runtime_error(string(" should not use this function if preserveString is false "));
+		}
+		vector<string> && result{};
+		auto idx = findSubStringIdx_wildCard(chars);
+		for (auto i : idx) {
+			result.push_back(strs[i]);
+		}
+		return result;
+	}
+
 	vector<string> findSubString(const string & s) {
 		if (!preserveString) {
 			throw runtime_error(string(" should not use this function if preserveString is false "));
@@ -365,7 +483,7 @@ public:
 		auto idx = findSubStringIdx(s);
 		for (auto i : idx) {
 			result.push_back(strs[i]);
-		}	
+		}
 		return result;
 	}
 
@@ -373,14 +491,14 @@ public:
 		budget represents the memory cost, since caching needs memory to store indices on leaf node.
 		budget = budgetRate * nodes.size()
 	*/
-	void cacheIntermediateNode(double budgetRate) { 
+	void cacheIntermediateNode(double budgetRate) {
 
 		this->budget = budgetRate * nodes.size();
-		cnodes = vector<QCountingNode> (nodes.size(), QCountingNode());
+		cnodes = vector<QCountingNode>(nodes.size(), QCountingNode());
 		setOpCost = vector<float>(nodes.size(), 0.0f);
 		setOpCostStatistics = vector<float>(nodes.size(), 0.0f);
 		set<int> myset;
-		this->statistics_sample_limit = (int)(5.0 * sqrt((double)nodes.size())) ;
+		this->statistics_sample_limit = (int)(5.0 * sqrt((double)nodes.size()));
 		this->threshold = 5.0; //set initial ratio
 		histogramIdx.reserve((int)(nodes.size() * sample_rate) * 2);
 		nonLeaf_left = (int)nodes.size() - leafNodesNum;
@@ -405,14 +523,14 @@ public:
 			  [this](const int & pos) {return cnodes[pos].strSet_p ? 1 : 0; },
 			  [this](const int & pos) {return cnodes[pos].strNum; },
 			  [this](const int & pos) {return getOpCost(pos); }
-			},50, 1e6f, 3, 1.5f);
+			}, 50, 1e6f, 3, 1.5f);
 
 
 		auto bin = get<0>(t);
 		auto hist = get<1>(t);
 		strBuffer << "strNum | \t count \t cached \t strNum \t setOpCost" << endl;
 		for (auto i = 0; i < bin.size(); i++) {
-			strBuffer << " strNum " << bin[i] ;
+			strBuffer << " strNum " << bin[i];
 			for (auto j = 0; j < hist.size(); j++) {
 				strBuffer << "\t" << hist[j][i];
 			}
@@ -460,7 +578,7 @@ private:
 	int statistics_total_strNum;
 	int nonLeaf_left;
 	double cache_used = 0.0;
-	vector<int> histogramIdx ;
+	vector<int> histogramIdx;
 	vector<float> setOpCost;
 	vector<float> setOpCostStatistics;
 
@@ -491,25 +609,25 @@ private:
 
 		// create histogram, and find the boudary where weight not exceed the budget
 		auto t = histogram<false>(
-			[this](const int & pos) {return (int)(thresholdCalc(pos)* 10.0f ); }, //make 10 time larger
+			[this](const int & pos) {return (int)(thresholdCalc(pos)* 10.0f); }, //make 10 time larger
 			{ [](const int & pos) {return 1; },
 			  [this](const int & pos) {return cnodes[pos].strNum; },
 			  [this](const int & pos) {return getOpCost(pos); }
-			}, 1000, 1000.0f, 1, 1.1f,10); //due to 10 time larger
+			}, 1000, 1000.0f, 1, 1.1f, 10); //due to 10 time larger
 
 		auto bin = get<0>(t);
 		auto hist = get<1>(t);
-		vector<int> accsum,accNodeNum;
-		accsum.reserve( bin.size() + 1 );
+		vector<int> accsum, accNodeNum;
+		accsum.reserve(bin.size() + 1);
 		accNodeNum.reserve(bin.size() + 1);
 
-		accsum.push_back(0); 
+		accsum.push_back(0);
 		accNodeNum.push_back(0); //leaf node is not in histogram
 
 		for (auto & i : hist[1])  // strNum
 			accsum.push_back(*(accsum.end() - 1) + i);
 		for (auto & i : hist[0])  // strNum
-			accNodeNum.push_back(*(accNodeNum.end() - 1) + i );
+			accNodeNum.push_back(*(accNodeNum.end() - 1) + i);
 
 		//------------ debug histogram ----------
 		//cout << "binsize " << bin.size() << endl;
@@ -531,9 +649,9 @@ private:
 
 		double factor = 1.0;
 		if (cached > 10)
-			factor = 0.5 * sqrt( 1.0 *last_estimateCached / cached ) + 0.5;
+			factor = 0.5 * sqrt(1.0 *last_estimateCached / cached) + 0.5;
 
-		for (int i = 1; i < bin.size() ; i++) {
+		for (int i = 1; i < bin.size(); i++) {
 			auto diffWeight = lastAccSum - accsum[i];/// = avg weight * node num
 
 			double estimateWeight = 1.0 * diffWeight / lastAccNodeNum * nonLeaf_left;
@@ -551,9 +669,9 @@ private:
 			}
 		}
 
-		if ( threshold > 3.0 && boundary < 1e8 && threshold < 1e8)
+		if (threshold > 3.0 && boundary < 1e8 && threshold < 1e8)
 			threshold = 0.7 * boundary + 0.3 * threshold;//momentum
-		else 
+		else
 			threshold = boundary;
 
 
@@ -562,10 +680,10 @@ private:
 
 		if (statistics_sample_limit <= (cnodes.size() - leafNodesNum) * sample_rate)
 			statistics_sample_limit *= 2;
-		if (histogramIdx.size() > (cnodes.size() - leafNodesNum ) / 10 )
+		if (histogramIdx.size() > (cnodes.size() - leafNodesNum) / 10)
 			histogramIdx.erase(histogramIdx.begin(), histogramIdx.begin() + histogramIdx.size());
 		// remove half histogram
-		
+
 		//cout << "threshold " << threshold << "  budget " << budget << " cache_used " << cache_used << " budgetLeft "<< budgetLeft << " nodes_left "<< nonLeaf_left << endl; //debug
 
 		threshold = threshold > 3.0 ? threshold : 3.0;
@@ -576,13 +694,13 @@ private:
 
 	/*
 		online tuning:
-		1. Each node has gain (the setopcost), and weight (strNum), 
+		1. Each node has gain (the setopcost), and weight (strNum),
 		2. Without exceeding the budget (weight limit), what's the biggest gain
 		3. It's like a knapsack problem.
 		4. Solve it with greedy approach.
-		5. keep a ratio of gain/weight, as long as a node's ratio is larger than it, 
+		5. keep a ratio of gain/weight, as long as a node's ratio is larger than it,
 		   it don't go beyong budget and gain the maximum(not exactly).
-        6. however we cannot foresee the ratio, it has to be estimated all the time.
+		6. however we cannot foresee the ratio, it has to be estimated all the time.
 
 	*/
 	void cacheNode(set<int> & parentSet, const int & pos, const int depth) {
@@ -590,7 +708,7 @@ private:
 		QCountingNode & cnode = cnodes[pos];
 		//cnode.depth = depth;
 
-		if (node.isLeaf() ) { // end == 0 means root
+		if (node.isLeaf()) { // end == 0 means root
 			int lastch = theString[node.end() - 1];
 			setOpCost[pos] = 1.0f;
 			//setOpCostStatistics[pos] = setOpCost[pos]; //not necessary
@@ -624,7 +742,7 @@ private:
 
 		double ratio = setOpCost[pos] * 1.0 / cnode.strNum;
 		//cout << ratio <<" "<< cnode.setOpCost<<"  "<< cnode.strNum << endl;
-		bool cache = this->thresholdCalc(pos) >= threshold ;
+		bool cache = this->thresholdCalc(pos) >= threshold;
 		//cache = false;
 		if (cache) {
 			cache_used += (double)cnode.strNum;
@@ -635,7 +753,7 @@ private:
 			setOpCost[pos] = (float)cnode.strNum; //reset cost to set size.
 
 		}
-		histogramIdx.push_back( pos );
+		histogramIdx.push_back(pos);
 		nonLeaf_left -= 1;
 	}
 
@@ -653,21 +771,21 @@ private:
 		for (int i = 0; i < bins; i++) {
 			int temp = binSize * i + (int)expbin + offset;
 			if (temp > binMax) break;
-			expbin =  factor * expbin ;
+			expbin = factor * expbin;
 			bin.push_back(temp);
 		}
 		int n = (int)bin.size();
-		vector<vector<int>> histograms(funcUpdates.size(), vector<int>(n,0));
+		vector<vector<int>> histograms(funcUpdates.size(), vector<int>(n, 0));
 		//for (const auto & i : this->cnodes) 
 		int i0_top = histogramAll ? (int)nodes.size() : (int)histogramIdx.size();
-		for (int i0 = 0; i0 < i0_top;i0++ ) {
+		for (int i0 = 0; i0 < i0_top; i0++) {
 			int k = histogramAll ? i0 : histogramIdx[i0];
 			auto i = cnodes[k];
 			auto it = lower_bound(bin.begin(), bin.end(), funcGet(k));
 			if (it != bin.begin())
 				it--;
 			int idx = (int)(it - bin.begin());
-			for (int j=0;j<funcUpdates.size();j++)
+			for (int j = 0; j < funcUpdates.size(); j++)
 				histograms[j][idx] += funcUpdates[j](k);
 		}
 		return make_tuple(bin, histograms);

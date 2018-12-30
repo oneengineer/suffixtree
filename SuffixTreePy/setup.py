@@ -6,8 +6,6 @@ import shutil
 import os
 import sys
 
-print(sys.argv) #debug
-
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
@@ -44,6 +42,7 @@ setup(
     description="A C implemented Suffix Tree package",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    install_requires=["automaton_tools"],
     url="https://github.com/oneengineer/suffixtree",
     packages=find_packages(),
     cmdclass=cmdclass

@@ -17,6 +17,8 @@
 #include <memory>
 
 #include "SuffixQueryTree.h"
+#include "common.h"
+
 
 
 using namespace std;
@@ -212,6 +214,8 @@ public:
 
 	void addString(const string & s) {
 		stringNum += 1;
+		// add string start, for wildcard, necessary ?
+		this->addChar(CHAR_STRING_START);
 		for (auto it : s) {
 			int ch = (int)it;
 			this->addChar(ch);
@@ -270,6 +274,23 @@ public:
 		return result;
 	}
 
+	vector<string> getStrings() const {
+		if (this->preserveString) return this->strs;
+		// reconstruct strings from theString;
+		vector<string> result;
+		string str;
+		for (const int & ch : theString) {
+			if (ch == CHAR_STRING_START) continue;
+			if (ch < 0) {// the end of a string
+				result.push_back(str);
+				str.clear();
+				continue;
+			}
+			char ch0 = (char)ch;
+			str.push_back(ch0);
+		}
+		return result;
+	}
 
 	void addStrings(const vector<string> & strings) {
 		int n = (int)strings.size();
@@ -278,7 +299,7 @@ public:
 			size += (int)s.length();
 		}
 
-		size = size + 2 * n + 10;
+		size = size + 3 * n + 10;
 		this->nodes.reserve(this->nodes.size() + size);
 
 		for (const auto & s : strings) {
@@ -287,7 +308,7 @@ public:
 	}
 
 	QSuffixTree queryTree() const {
-		QSuffixTree && qst = QSuffixTree(this->stringNum, this->preserveString);
+		QSuffixTree qst = QSuffixTree(this->stringNum, this->preserveString);
 		qst.nodes.reserve(this->nodes.size());
 		qst.children.reserve(this->nodes.size() - 1);
 		int children_i = 0;
