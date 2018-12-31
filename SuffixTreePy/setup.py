@@ -28,6 +28,7 @@ class MyBuild(build_py):
         except Exception as e:
             print(e)
             print("failed to copy ",sopath)
+        super().run()
 
 cmdclass={
     'build_py': MyBuild
@@ -36,7 +37,7 @@ cmdclass={
 
 setup(
     name="csuffixtree",
-    version="0.1.0",
+    version="0.2.0",
     author="oneengineer",
     author_email="oneengineer@gmail.com",
     description="A C implemented Suffix Tree package",
@@ -45,5 +46,7 @@ setup(
     install_requires=["automaton_tools"],
     url="https://github.com/oneengineer/suffixtree",
     packages=find_packages(),
+    include_package_data = True,
+    package_data={'suffixtree':['*.so','*.dll']},
     cmdclass=cmdclass
 )

@@ -7,19 +7,10 @@ LEN_MATCH_ANY = -1
 class RegularExpSearch(object):
     """description of class"""
 
-    def __init__(self,regex, andClause_searchNum = 4):
-        self.regex = regex
+    def __init__(self,suffixQueryTree:SuffixQueryTree,andClause_searchNum = 4):
         self.andClause_searchNum = andClause_searchNum
-
-        input = InputStream(regex)
-        lexer = RegexLexer(input)
-        stream = CommonTokenStream(lexer)
-        parser = RegexParser(stream)
-        parser.addErrorListener(AutomatonErrorListener)
-        root = parser.root()
-        visitor = ASTVisitor()
-        ast = visitor.visit(root)
-        self.ast = ast
+        self.st = suffixQueryTree
+        self.allStrings = None
 
     def _combine(self,tree):
         t = type(tree)
@@ -116,6 +107,8 @@ class RegularExpSearch(object):
             pattern = []
             for i in clause.seq:
                 t = type(i)
+                #print(isinstance(i,CharRange))
+                #print(isinstance(i,CharSet))
                 if t in m:
                     pattern += [ m[t] ]
                 elif t is CharRange:
@@ -123,7 +116,7 @@ class RegularExpSearch(object):
                 elif t is CharSet:
                     pattern += [ str(i.char) ]
                 else: 
-                    raise Exception("Unknown type " + str(t))
+                    raise Exception(f"Unknown type {t} {i}")
             result = set( self.st.findStringIdx_wildCard(pattern) )
             return result
         elif type(clause) is ORclause:
@@ -142,22 +135,48 @@ class RegularExpSearch(object):
                 if result is None:
                     result = self._getWildCard(i)
                 else:
-                    temp = self._getWildCard(i)
-                    result = result.intersection(temp)
                     if i.len == LEN_MATCH_ANY:
                         break;
+                    temp = self._getWildCard(i)
+                    result = result.intersection(temp)
             return result
         else:
             raise Exception("Unknown clause " + str(type(clause)))
 
-    def searchStringIdx(self,suffixQueryTree:SuffixQueryTree):
-        self.st = suffixQueryTree
+    def _parseRegex(self,regex):
+        input = InputStream(regex)
+        lexer = RegexLexer(input)
+        stream = CommonTokenStream(lexer)
+        parser = RegexParser(stream)
+        parser.addErrorListener(AutomatonErrorListener)
+        root = parser.root()
+        visitor = ASTVisitor()
+        ast = visitor.visit(root)
+        self.ast = ast
+        return ast
 
-        clause = self._translateToClause(self.ast)
+    def searchPossibleStringIdx(self,regex):
+        ast = self._parseRegex(regex)
+        clause = self._translateToClause(ast)
         clause = self._resolveConcat(clause)
         minClause = self._combine(clause)
         minClause.setLen()
         return self._getWildCard(minClause)
+        
+    def searchString(self,regex):
+        import re
+        idx = self.searchPossibleStringIdx(regex)
+        if self.allStrings is None:
+            self.allStrings = self.st.getStrings()
+        selected = [ self.allStrings[i] for i in idx ]
+        # check if selected string matches the pattern
+        prog = re.compile(regex)
+        result = [ i
+            for i in selected
+            if prog.match(i)
+        ]
+        return result
+        
 
 class ORclause:
     def __init__(self,operands):

@@ -1,4 +1,5 @@
 from suffixtree import *
+import re
 
 strs = [
 "abc",
@@ -15,19 +16,35 @@ strs = [
 "12",
 "11",
 "a1a",
+"b",
 "a2@",
 "wwwr"
 ]
+tree = SuffixQueryTree(False)
+tree.initStringsWithCache(strs)
+allstr = tree.getStrings()
+r = RegularExpSearch(tree)
+
+def test1():
+    
+    p = "[^bc23]+([b-c]+|2|3){2,}$"
+    t = r.searchString(p)
+    print("match strings: ",t)
+    t2 = [ i for i in strs if re.match(p,i) ]
+    print(t2)
+    assert set(t) == set(t2)
 
 def main():
-    tree = SuffixQueryTree(False)
-    tree.initStringsWithCache(strs)
-    allstr = tree.getStrings()
-    print(allstr)
-    r = RegularExpSearch("(a\\d.|21)^")
-    t = r.searchStringIdx(tree)
+
+    t = r.searchPossibleStringIdx("(a\\d.|21)^")
     result = list(map(lambda x:allstr[x],t))
-    print(result)
+    print("possible: ",result)
+    
+    t = r.searchString("^(a\\d.|21)")
+    print(t)
+    
+    
+    
     try:
         t = tree.findStringIdx_wildCard(["1","12",SuffixQueryTree.CHAR_STRING_START])
         print(t)
@@ -36,7 +53,8 @@ def main():
     except Exception as e:
         print(e)
 
-main()
+test1()
+#main()
 
 
 
