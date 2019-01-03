@@ -37,7 +37,7 @@ cmdclass={
 
 setup(
     name="csuffixtree",
-    version="0.2.0",
+    version="0.2.3",
     author="oneengineer",
     author_email="oneengineer@gmail.com",
     description="A C implemented Suffix Tree package",
