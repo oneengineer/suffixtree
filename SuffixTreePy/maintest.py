@@ -1,5 +1,7 @@
 from suffixtree import *
 import re
+from threading import Thread
+import threading
 
 strs = [
 "abc",
@@ -34,6 +36,21 @@ def test1():
     print(t2)
     assert set(t) == set(t2)
 
+
+
+def test3():
+    print("Thread #: " + str( threading.get_ident() ))
+    p = "[^bc23]+([b-c]+|2|3){2,}$"
+    temp = 0
+    for i in range(1000):
+        s = r.st.getStrings()
+        t = r.searchPossibleStringIdx(p)
+        import time
+        time.sleep(0.01)
+        temp += len(t)
+        print(threading.get_ident(),i,len(t),len(s))
+    return temp
+
 def main():
 
     t = r.searchPossibleStringIdx("(a\\d.|21)^")
@@ -42,8 +59,6 @@ def main():
     
     t = r.searchString("^(a\\d.|21)")
     print(t)
-    
-    
     
     try:
         t = tree.findStringIdx_wildCard(["1","12",SuffixQueryTree.CHAR_STRING_START])
@@ -56,5 +71,13 @@ def main():
 test1()
 #main()
 
+def test2():
+    ts = [Thread(target = test3) for _ in range (5)]
+    for i in ts:
+        i.start()
 
+    for i in ts:
+        i.join()
+
+test2()
 
