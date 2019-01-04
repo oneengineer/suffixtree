@@ -69,6 +69,21 @@ class SuffixQueryTree(object):
             path = path.encode('utf-8')
             self.lib.saveSuffixQueryTreeToFilePy(self.c_qtree, path)
 
+    def zippedSerialize(self,path):
+        import zlib
+        b1 = self.lib.saveSuffixQueryTreePy(self.c_qtree)
+        b1 = zlib.compress(b1,3)
+        with open(path,"wb") as f:
+            f.write(b1)
+
+    def zippedDeserialize(self,path):
+        import zlib
+        with open(path,"rb") as f:
+            b1 = f.read()
+        b1 = zlib.decompress(b1)
+        self.c_qtree = self.lib.readSuffixQueryTreePy(b1)
+        #TODO modify python side preserveString
+
     def deserialize(self,content = None):
         if type(content) == bytes:
             self.c_qtree = self.lib.readSuffixQueryTreePy(content)
