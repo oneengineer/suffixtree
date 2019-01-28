@@ -164,7 +164,6 @@ class RegularExpSearch(object):
 
     def searchPossibleStringIdx(self,regex):
         ast = self._parseRegex(regex)
-        print(ast)
         clause = self._translateToClause(ast)
         clause = self._resolveConcat(clause)
         if type(clause) is Break:# empty match like x? or .*
