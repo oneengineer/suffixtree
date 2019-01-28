@@ -56,6 +56,8 @@ class RegularExpSearch(object):
         if len(current) > 0:
             c = CharsetSeq(current)
             seq += [c]
+        if len(seq) < 1:
+            return Break()
         if len(seq) < 2:
             return seq[0]
         return ANDclause(seq)
@@ -91,6 +93,8 @@ class RegularExpSearch(object):
             return Concatclause([a, Break()])
         elif t is CharsetAST :
             return CharsetSeq([ast.charset]) # charset is the type in automaton_tools
+        elif t is OptionAST:
+            return Break()
         elif t is StarAST:
             return Break()
         else :
@@ -143,6 +147,9 @@ class RegularExpSearch(object):
         else:
             raise Exception("Unknown clause " + str(type(clause)))
 
+    def _allIdx(self):
+        return set(range(len(self.st.getStrings())))
+
     def _parseRegex(self,regex):
         input = InputStream(regex)
         lexer = RegexLexer(input)
@@ -157,10 +164,16 @@ class RegularExpSearch(object):
 
     def searchPossibleStringIdx(self,regex):
         ast = self._parseRegex(regex)
+        print(ast)
         clause = self._translateToClause(ast)
         clause = self._resolveConcat(clause)
+        if type(clause) is Break:# empty match like x? or .*
+            return self._allIdx()
         minClause = self._combine(clause)
         minClause.setLen()
+        if type(minClause) is CharsetSeq and \
+                minClause.len == LEN_MATCH_ANY:
+            return self._allIdx()
         return self._getWildCard(minClause)
         
     def searchString(self,regex):
