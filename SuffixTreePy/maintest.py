@@ -68,7 +68,7 @@ def main():
     except Exception as e:
         print(e)
 
-test1()
+#test1()
 #main()
 
 def test2():
@@ -79,5 +79,9 @@ def test2():
     for i in ts:
         i.join()
 
-test2()
+#test2()
+
+from suffixtree.TestClass import *
+import unittest
+unittest.main()
 

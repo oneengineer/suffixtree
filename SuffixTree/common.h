@@ -9,6 +9,19 @@ extern const int CHAR_WORD;
 extern const int CHAR_STRING_START;
 extern const int CHAR_STRING_END;
 
+
+inline int toLowerCase(int ch) {
+	if (65 <= ch && ch <= 90)
+		return ch + 32;
+	return ch;
+}
+
+inline int toUpperCase(int ch) {
+	if (97 <= ch && ch <= 122)
+		return ch - 32;
+	return ch;
+}
+
 class Charset {
 public:
 	set<int> chars;
@@ -33,9 +46,19 @@ public:
 		else return specialChar == ch;
 	}
 
+	template<bool case_sensitive>
 	inline bool match(const int &ch) const {
 		if (specialChar != 0)
 			return matchSpecial(ch);
-		return chars.find(ch) != chars.end();
+		if (case_sensitive)
+			return chars.find(ch) != chars.end();
+		else {
+			auto upper = toUpperCase(ch);
+			auto lower = toLowerCase(ch);
+			bool findU = chars.find(upper) != chars.end();
+			bool findL = chars.find(lower) != chars.end();
+			return findU || findL;
+		}
 	}
 };
+

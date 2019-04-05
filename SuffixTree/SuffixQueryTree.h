@@ -280,16 +280,38 @@ public:
 		i.close();
 	}
 
+	inline bool chcmp_smaller(const QChildren & a, const int & ch) {
+		return a.ch < ch;
+	}
+
+	template<bool case_sensitive>
 	int findChildren(const QTreeNode & node, int ch) const {
 		auto begin = children.begin() + node.childrenIdx;
 		auto end = begin + node.lengthChildren;
-		auto result = lower_bound(begin, end, ch, [](const QChildren & a, const int ch) {
-			return a.ch < ch;
-		});
-		if (result == end || result->ch != ch) { // not found
-			return -1;
+		if (case_sensitive) {
+			auto result = lower_bound(begin, end, ch, [](const QChildren & a, const int ch) {
+				return a.ch < ch;
+			});
+			if (result == end || result->ch != ch) // not found
+				return -1;
+			return (int)(result - children.begin());
 		}
 		else {
+			auto upper = toUpperCase(ch);
+			auto lower = toLowerCase(ch);
+			auto result = lower_bound(begin, end, upper, [](const QChildren & a, const int ch) {
+				return a.ch < ch;
+			});
+			auto upper_fail = (result == end || result->ch != upper); // not found
+			auto lower_fail = upper_fail;
+			if (upper != lower && upper_fail) {
+				result = lower_bound(begin, end, lower, [](const QChildren & a, const int ch) {
+					return a.ch < ch;
+				});
+				lower_fail = (result == end || result->ch != lower); // not found
+			}
+			if (upper_fail && lower_fail)
+				return -1;
 			return (int)(result - children.begin());
 		}
 	}
@@ -319,17 +341,18 @@ public:
 		}
 	}
 
+	template<bool case_sensitive>
 	vector<int> edgeIntersect_wildCard(const QTreeNode & node, const Charset & ch) const {
 		vector<int> result;
 		if (ch.specialChar != 0) {
 			for (auto i = node.childrenIdx; i < node.childrenIdx + (int)node.lengthChildren; i++) {
-				if (ch.match(children[i].ch))
+				if (ch.match<case_sensitive>(children[i].ch))
 					result.push_back(i);
 			}
 		}
 		else {
 			for (const auto & c : ch.chars) {
-				int childpos = findChildren(node, c);
+				int childpos = findChildren<case_sensitive>(node, c);
 				if (childpos >= 0) result.push_back(childpos);
 			}
 		}
@@ -354,6 +377,7 @@ public:
 		return result;
 	}
 
+	template<bool case_sensitive>
 	vector<int> findSubStringIdx_wildCard(const vector<Charset> & chars) {
 		set<int> resultset;
 		vector<int> result;
@@ -388,7 +412,7 @@ public:
 			if (edgeLen == node.lengthStr || pos == 0) {
 				if (node.isLeaf()) continue;
 				// loop all possible edges from the node
-				auto intersect = edgeIntersect_wildCard(node, ch0);
+				auto intersect = edgeIntersect_wildCard<case_sensitive>(node, ch0);
 				for (auto childpos : intersect) {
 					q_pos.push_back(children[childpos].pos);
 					q_len.push_back(1);
@@ -397,7 +421,7 @@ public:
 			}
 			else {
 				auto chcmp = theString[node.start + edgeLen];
-				if (ch0.match(chcmp)) {
+				if (ch0.match<case_sensitive>(chcmp)) {
 					// the front has already been pop out, need to push back, this time push it to front
 					edgeLen += 1;
 					q_pos.push_front(pos);
@@ -420,6 +444,7 @@ public:
 		return result;
 	}
 
+	template<bool case_sensitive>
 	vector<int> findSubStringIdx(const string & s) {
 		set<int> resultset;
 		vector<int> result;
@@ -434,15 +459,22 @@ public:
 
 			if (edgeLen == node.lengthStr || pos == 0) {
 				if (node.isLeaf()) return result;
-				int childpos = findChildren(node, ch);
+				int childpos = findChildren<case_sensitive>(node, ch);
 				if (childpos < 0) return result;
 				pos = children[childpos].pos;
 				edgeLen = 1;
 			}
 			else {
 				auto chcmp = theString[node.start + edgeLen];
-				if (chcmp != ch) {
-					return result;
+				if (case_sensitive) { //template optimize
+					if (chcmp != ch) 
+						return result;
+				}
+				else {
+					auto lower_ch = toLowerCase(ch);
+					auto lower_chcmp = toLowerCase(chcmp);
+					if (lower_chcmp != lower_ch) 
+						return result;
 				}
 				edgeLen += 1;
 			}
@@ -462,25 +494,26 @@ public:
 		return result;
 	}
 
-
+	template<bool case_sensitive>
 	vector<string> findSubString_wildCard(const vector<Charset> & chars) {
 		if (!preserveString) {
 			throw runtime_error(string(" should not use this function if preserveString is false "));
 		}
 		vector<string> && result{};
-		auto idx = findSubStringIdx_wildCard(chars);
+		auto idx = findSubStringIdx_wildCard<case_sensitive>(chars);
 		for (auto i : idx) {
 			result.push_back(strs[i]);
 		}
 		return result;
 	}
 
+	template<bool case_sensitive>
 	vector<string> findSubString(const string & s) {
 		if (!preserveString) {
 			throw runtime_error(string(" should not use this function if preserveString is false "));
 		}
 		vector<string> && result{};
-		auto idx = findSubStringIdx(s);
+		auto idx = findSubStringIdx<case_sensitive>(s);
 		for (auto i : idx) {
 			result.push_back(strs[i]);
 		}

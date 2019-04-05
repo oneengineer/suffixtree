@@ -2,8 +2,8 @@ from ctypes import *
 import os
 
 if os.name == 'nt':
-    dllpath = os.path.dirname(os.path.abspath(__file__)) + "/SuffixTreePyBinding.dll"
-    #dllpath = os.path.dirname(os.path.abspath(__file__)) + "/../../x64/Release/SuffixTreePyBinding.dll"
+    #dllpath = os.path.dirname(os.path.abspath(__file__)) + "/SuffixTreePyBinding.dll"
+    dllpath = os.path.dirname(os.path.abspath(__file__)) + "/../../x64/Release/SuffixTreePyBinding.dll"
 else:
     dllpath = os.path.dirname(os.path.abspath(__file__)) + "/libSuffixTreePyBinding.so"
 
@@ -24,19 +24,19 @@ class SuffixQueryTree(object):
         lib.createSuffixQueryTreePyWithCache.argtypes = [ py_object,c_bool,c_double,c_double ] # list string, persist, budgetRatio, sampleRate
         lib.createSuffixQueryTreePyWithCache.restype = py_object # pointer
 
-        lib.findStringIdx_qtreePy.argtypes = [ py_object,py_object ] # tree_capsule, string
+        lib.findStringIdx_qtreePy.argtypes = [ py_object,py_object,c_bool ] # tree_capsule, string
         lib.findStringIdx_qtreePy.restype = py_object # list int
 
-        pylib.findString_qtreePy.argtypes = [ py_object, py_object ] # tree_capsule, string
+        pylib.findString_qtreePy.argtypes = [ py_object, py_object,c_bool ] # tree_capsule, string
         pylib.findString_qtreePy.restype = py_object # list string
 
         lib.cacheIntermediateNodePy.argtypes = [ py_object, c_double, c_double ] # tree_capsule, budgetRatio, sampleRate
         lib.cacheIntermediateNodePy.restype = py_object # list string
 
-        pylib.findString_QTree_wildcardPy.argtypes = [ py_object, py_object ] # tree_capsule, list_charset
+        pylib.findString_QTree_wildcardPy.argtypes = [ py_object, py_object,c_bool ] # tree_capsule, list_charset
         pylib.findString_QTree_wildcardPy.restype = py_object # list string
 
-        lib.findStringIdx_QTree_wildcardPy.argtypes = [ py_object, py_object ] # tree_capsule, list_charset
+        lib.findStringIdx_QTree_wildcardPy.argtypes = [ py_object, py_object,c_bool ] # tree_capsule, list_charset
         lib.findStringIdx_QTree_wildcardPy.restype = py_object # list int
 
         lib.allString_SuffixQueryTreePy.argtypes = [ py_object ] # tree_capsule
@@ -95,23 +95,25 @@ class SuffixQueryTree(object):
         #TODO modify python side preserveString
 
 
-    def findStringIdx(self,s:str):
-        return self.lib.findStringIdx_qtreePy(self.c_qtree,s)
+    def findStringIdx(self,s:str,case_sensitive:bool = True): 
+        return self.lib.findStringIdx_qtreePy(self.c_qtree,s,case_sensitive)
 
-    def findString(self,s:str):
-        return self.pylib.findString_qtreePy(self.c_qtree,s)
+    def findString(self,s:str,case_sensitive:bool = True): 
+        return self.pylib.findString_qtreePy(self.c_qtree,s,case_sensitive)
 
     def initStrings(self,strs:list):
+        self.numStr = len(strs)
         self.c_qtree = self.lib.createSuffixQueryTreePy(strs,self.preserveString)
 
     def initStringsWithCache(self,strs:list):
+        self.numStr = len(strs)
         self.c_qtree = self.lib.createSuffixQueryTreePyWithCache(strs,self.preserveString,1.5,0.01)
 
-    def findStringIdx_wildCard(self,s:list): 
-        return self.lib.findStringIdx_QTree_wildcardPy(self.c_qtree,s)
+    def findStringIdx_wildCard(self,s:list,case_sensitive:bool = True): 
+        return self.lib.findStringIdx_QTree_wildcardPy(self.c_qtree,s,case_sensitive)
 
-    def findString_wildCard(self,s:list): 
-        return self.pylib.findString_QTree_wildcardPy(self.c_qtree,s)
+    def findString_wildCard(self,s:list,case_sensitive:bool = True): 
+        return self.pylib.findString_QTree_wildcardPy(self.c_qtree,s,case_sensitive)
 
     def cacheNodes(self,budgetRatio:float = 0.5,sampleRate:float = 0.01):
         log = self.lib.cacheIntermediateNodePy(self.c_qtree,budgetRatio,sampleRate)

@@ -7,10 +7,13 @@ LEN_MATCH_ANY = -1
 class RegularExpSearch(object):
     """description of class"""
 
+    
     def __init__(self,suffixQueryTree:SuffixQueryTree,andClause_searchNum = 4):
+        "suffixQueryTree can be tree or forest"
         self.andClause_searchNum = andClause_searchNum
         self.st = suffixQueryTree
         self.allStrings = None
+        self.case_sensitive = True
 
     def _combine(self,tree):
         t = type(tree)
@@ -121,7 +124,7 @@ class RegularExpSearch(object):
                     pattern += [ str(i.char) ]
                 else: 
                     raise Exception(f"Unknown type {t} {i}")
-            result = set( self.st.findStringIdx_wildCard(pattern) )
+            result = set( self.st.findStringIdx_wildCard(pattern,self.case_sensitive) )
             return result
         elif type(clause) is ORclause:
             result = set()
@@ -182,7 +185,10 @@ class RegularExpSearch(object):
             self.allStrings = self.st.getStrings()
         selected = [ self.allStrings[i] for i in idx ]
         # check if selected string matches the pattern
-        prog = re.compile(regex)
+        if self.case_sensitive:
+            prog = re.compile(regex)
+        else:
+            prog = re.compile(regex,re.IGNORECASE)
         result = [ i
             for i in selected
             if prog.match(i)

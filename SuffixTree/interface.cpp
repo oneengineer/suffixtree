@@ -64,14 +64,20 @@ vector<string> findString(void * p, string s) {
 	return tree.findSubString(s);
 }
 
-vector<int> findStringIdx_QTree(void * p, string s) {
+vector<int> findStringIdx_QTree(void * p, string s, bool case_sensitive) {
 	QSuffixTree & qtree = *(QSuffixTree *)p;
-	return qtree.findSubStringIdx(s);
+	if (case_sensitive)
+		return qtree.findSubStringIdx<true>(s);
+	else 
+		return qtree.findSubStringIdx<false>(s);
 }
 
-vector<string> findString_QTree(void * p, string s) {
+vector<string> findString_QTree(void * p, string s, bool case_sensitive) {
 	QSuffixTree & qtree = *(QSuffixTree *)p;
-	return qtree.findSubString(s);
+	if (case_sensitive)
+		return qtree.findSubString<true>(s);
+	else 
+		return qtree.findSubString<false>(s);
 }
 
 void suffixTreeAddStrings(void * p, vector<string> strs) {
@@ -115,13 +121,19 @@ void readSuffixQueryTree(void * p, istream & i) {
 	tree->deserialize(i);
 }
 
-vector<int> findStringIdx_QTree_wildcard(void * qtree, const vector<Charset> & s) {
+vector<int> findStringIdx_QTree_wildcard(void * qtree, const vector<Charset> & s, bool case_sensitive) {
 	QSuffixTree * tree = (QSuffixTree *)qtree;
-	return tree->findSubStringIdx_wildCard(s);
+	if (case_sensitive)
+		return tree->findSubStringIdx_wildCard<true>(s);
+	else 
+		return tree->findSubStringIdx_wildCard<false>(s);
 }
-vector<string> findString_QTree_wildcard(void * qtree, const vector<Charset> & s) {
+vector<string> findString_QTree_wildcard(void * qtree, const vector<Charset> & s, bool case_sensitive) {
 	QSuffixTree * tree = (QSuffixTree *)qtree;
-	return tree->findSubString_wildCard(s);
+	if (case_sensitive)
+		return tree->findSubString_wildCard<true>(s);
+	else
+		return tree->findSubString_wildCard<false>(s);
 }
 
 vector<string> allString_SuffixQueryTree(void * qtree) {

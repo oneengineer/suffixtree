@@ -38,11 +38,11 @@ vector<int> findStringIdx(void * tree, string s);
 vector<string> findString(void * tree, string s);
 
 //QSuffixTree *
-vector<int> findStringIdx_QTree(void * qtree, string s);
-vector<string> findString_QTree(void * qtree, string s);
+vector<int> findStringIdx_QTree(void * qtree, string s, bool case_sensitive);
+vector<string> findString_QTree(void * qtree, string s, bool case_sensitive);
 
-vector<int> findStringIdx_QTree_wildcard(void * qtree, const vector<Charset> & s);
-vector<string> findString_QTree_wildcard(void * qtree, const vector<Charset> & s);
+vector<int> findStringIdx_QTree_wildcard(void * qtree, const vector<Charset> & s, bool case_sensitive);
+vector<string> findString_QTree_wildcard(void * qtree, const vector<Charset> & s, bool case_sensitive);
 
 
 void suffixTreeAddStrings(void * tree, vector<string> strs);

@@ -1,4 +1,4 @@
-CFLAGS += -fPIC -g
+CFLAGS += -fPIC -O3
 CXXFLAGS = $(CFLAGS) -std=c++17
 CC = g++
 

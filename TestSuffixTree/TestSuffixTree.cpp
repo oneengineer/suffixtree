@@ -25,31 +25,35 @@ string randStr() {
 void benchmark() {
 	SuffixTree *st = new SuffixTree(true);
 	vector<string> strs;
-	std::ifstream file("test.txt");
+	//std::ifstream file("test.txt");
+	std::ifstream file("C:\\Users\\xiaochent\\Downloads\\name_data.txt");
+
 	std::string str;
 	cout << "started " << endl;
 	int c = 0;
+	int strlensum = 0;
 	while (std::getline(file, str))
 	{
 		strs.push_back(str);
 		c += 1;
+		strlensum += (int)str.length();
 		//if (c > 100000) break;
 	}
-	cout << "finished reading " << strs.size() << endl;
+	cout << "finished reading " << strs.size() << "total chars:"<< strlensum << endl;
 	file.close();
 
 	typedef std::chrono::milliseconds ms;
 	auto start = std::chrono::system_clock::now();
-	st->addStrings(strs);
+	//st->addStrings(strs);
 	c = 0;
 	for (auto i : strs) {
-		//st.addString(i);
-		//c += 1;
-		//if (c % 10000 == 0) {
-		//	auto end = std::chrono::system_clock::now();
-		//	auto duration = end - start;
-		//	cout << "time cost " << (chrono::duration_cast<ms>(duration).count()) << endl;
-		//}
+		st->addString(i);
+		c += 1;
+		if (c % 10000 == 0) {
+			auto end = std::chrono::system_clock::now();
+			auto duration = end - start;
+			cout << "time cost " << (chrono::duration_cast<ms>(duration).count()) << endl;
+		}
 
 	}
 
@@ -144,7 +148,7 @@ void test_findStr_wildcard() {
 	vector<vector<Charset>> vs = { v0,v1,v2,v3,v4,v5,v6,v7,v8 };
 	for (int i = 0; i < vs.size(); i++) {
 		auto & v = vs[i];
-		auto results = t.findSubString_wildCard(v);
+		auto results = t.findSubString_wildCard<true>(v);
 		cout << "to find ith element " << i << endl;
 		for (auto x : results) {
 			cout << "\t Found: " << x << endl;
@@ -259,8 +263,8 @@ void benchmark_QSuffixTree() {
 
 		if (len1 == len2) continue;
 
-		auto result = q2.findSubString(s);
-		auto result2 = qtree.findSubString(s);
+		auto result = q2.findSubString<true>(s);
+		auto result2 = qtree.findSubString<true>(s);
 		if (result.size() != result2.size()) {
 			cout << "error" << endl;
 		}
@@ -289,9 +293,9 @@ int main()
 {
 	srand(time(NULL));   // Initialization, should only be called once.
 
-	//benchmark();
+	benchmark();
 	//benchmark_QSuffixTree();
-	test_findStr_wildcard();
+	//test_findStr_wildcard();
 
 
 	//test();

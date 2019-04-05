@@ -218,26 +218,26 @@ extern "C" MYDLL void suffixTreeAddStringPy(PyObject * tree_capsule, PyObject *p
 /*
 	return list of int
 */
-extern "C" MYDLL PyObject * findStringIdx_qtreePy(PyObject * qtree_capsule, PyObject *pys) {
+extern "C" MYDLL PyObject * findStringIdx_qtreePy(PyObject * qtree_capsule, PyObject *pys, bool case_sensitive) {
 	auto *tree = PyCapsule_GetPointer(qtree_capsule, "SuffixQueryTree");
 
 	PyGILState_STATE state = PyGILState_Ensure();
 	string s = pyString_toString(pys);
 	PyGILState_Release(state);
-	auto idx = findStringIdx_QTree(tree, s);
+	auto idx = findStringIdx_QTree(tree, s, case_sensitive);
 	return vectorInt_toPyList(idx);
 }
 
 /*
 	return list of string
 */
-extern "C" MYDLL PyObject * findString_qtreePy(PyObject * qtree_capsule, PyObject *pys) {
+extern "C" MYDLL PyObject * findString_qtreePy(PyObject * qtree_capsule, PyObject *pys, bool case_sensitive) {
 	auto *tree = PyCapsule_GetPointer(qtree_capsule, "SuffixQueryTree");
 	PyGILState_STATE state = PyGILState_Ensure();
 	string s = pyString_toString(pys);
 	PyGILState_Release(state);
 	try {
-		auto strs = findString_QTree(tree, s);
+		auto strs = findString_QTree(tree, s, case_sensitive);
 		return vectorString_toPyList(strs);
 	}
 	catch (std::exception e) {
@@ -319,12 +319,12 @@ extern "C" MYDLL PyObject * readSuffixQueryTreePy(PyObject* pybytes) {
 }
 
 //list_charset is a list of string or int, int is considered to be special char
-extern "C" MYDLL PyObject * findString_QTree_wildcardPy(PyObject * tree_capsule, PyObject *list_charset) {
+extern "C" MYDLL PyObject * findString_QTree_wildcardPy(PyObject * tree_capsule, PyObject *list_charset, bool case_sensitive) {
 	auto *qtree = PyCapsule_GetPointer(tree_capsule, "SuffixQueryTree");
 	vector<Charset> chars;
 	chars = translateList(list_charset);
 	try {
-		auto strs = findString_QTree_wildcard(qtree, chars);
+		auto strs = findString_QTree_wildcard(qtree, chars, case_sensitive);
 		return vectorString_toPyList(strs);
 	}
 	catch (std::exception e) {
@@ -336,11 +336,11 @@ extern "C" MYDLL PyObject * findString_QTree_wildcardPy(PyObject * tree_capsule,
 }
 
 //list_charset is a list of list_string, list_string is used for representing charset
-extern "C" MYDLL PyObject * findStringIdx_QTree_wildcardPy(PyObject * tree_capsule, PyObject *list_charset) {
+extern "C" MYDLL PyObject * findStringIdx_QTree_wildcardPy(PyObject * tree_capsule, PyObject *list_charset, bool case_sensitive) {
 	auto *qtree = PyCapsule_GetPointer(tree_capsule, "SuffixQueryTree");
 	vector<Charset> chars;
 	chars = translateList(list_charset);
-	auto idx = findStringIdx_QTree_wildcard(qtree, chars);
+	auto idx = findStringIdx_QTree_wildcard(qtree, chars, case_sensitive);
 	auto result = vectorInt_toPyList(idx);
 	return result;
 }
