@@ -1,6 +1,8 @@
 from suffixtree.SuffixTree import SuffixQueryTree
 from concurrent.futures import *
 import threading
+from itertools import accumulate 
+
 
 class SuffixQueryForest(SuffixQueryTree):
 
@@ -20,9 +22,7 @@ class SuffixQueryForest(SuffixQueryTree):
         return t
 
     def _createTrees(self, strs:list, withCache:bool):
-        from itertools import accumulate 
         self.numTree = min(len(strs), self.numTree)
-        
         if self.parallelThread == 1:
             self._subNumTree = [0]
             self.trees = [self._createOneTree(strs, withCache)]
@@ -61,12 +61,44 @@ class SuffixQueryForest(SuffixQueryTree):
             futures = [ self.executor.submit( i.zippedSerialize, path + ".part_" + str(idx) ) for (idx,i) in enumerate(self.trees)]
             temp = [i.result() for i in futures]
 
+    def _fetchFiles(self,path):
+        import os
+        path = os.path.abspath(path)
+        fileName = os.path.basename(path)
+        dirName = os.path.dirname(path)
+        prefix = fileName + ".part_"
+        def extractName(name):
+            if not name.startswith(prefix):
+                return None
+            partIdx = name[len(prefix):]
+            if not partIdx.isdigit():
+                return None
+            return (name,int(partIdx))
+        l = []
+        for name in os.listdir(dirName):
+            temp = extractName(name)
+            if temp is None:
+                continue
+            l += [ temp ]
+        l = sorted(l,key = lambda x:x[1])
+        # check length and numbers
+        if list(range(len(l))) != [i[1] for i in l]:
+            raise Exception("missing part, parts file provided:",l)
+        return [os.path.join(dirName, i[0]) for i in l]
+
     def zippedDeserialize(self,path):
+        l = self._fetchFiles(path)
+        self.trees = [ SuffixQueryTree(self.preserveString) for i in l ]
+
         if self.parallelThread == 1:
-            temp = [ i.zippedDeserialize(path) for i in self.trees]
+            for i,path in zip(self.trees, l):
+                i.zippedDeserialize(path)
         else:
-            futures = [ self.executor.submit( i.zippedDeserialize, path + ".part_" + str(idx) ) for (idx,i) in enumerate(self.trees)]
+            futures = [ self.executor.submit( i.zippedDeserialize, path) for i,path in zip(self.trees, l)]
             temp = [i.result() for i in futures]
+        # load id offset
+        len_parts = map( lambda x:x.getStrNum(), self.trees )
+        self._subNumTree = [0] + list(accumulate(len_parts))
 
     def deserialize(self,content = None):
         raise Exception("Not support in SuffixTree Forest")
@@ -113,3 +145,6 @@ class SuffixQueryForest(SuffixQueryTree):
         for i in self.trees:
             l.extend(i.getStrings())
         return l
+
+    def getStrNum(self):
+        return self._subNumTree[-1]

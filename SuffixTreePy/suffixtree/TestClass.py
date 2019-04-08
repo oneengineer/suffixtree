@@ -100,7 +100,7 @@ class TestClass(unittest.TestCase):
 
 
 
-class TestClass(unittest.TestCase):
+class TestClass2(unittest.TestCase):
     
     def generateRandomString(self,charBase:list,length:int,num:int = 1):
         import random
@@ -173,3 +173,72 @@ class TestClass(unittest.TestCase):
 
         p4 = "[^bc23]+([b-c]+|2|3){2,}$"
         self.assertEqual(sorted(r.searchPossibleStringIdx(p4)), sorted(r2.searchPossibleStringIdx(p4)))
+
+
+
+class TestClass3(unittest.TestCase):
+    
+    def generateRandomString(self,charBase:list,length:int,num:int = 1):
+        import random
+        def a():
+            return "".join([ random.choice(charBase) for i in range(length)])
+        if num == 1:
+            return a()
+        return [a() for i in range(num)]
+        
+
+    def test_num_str(self):
+        "test get number of string"
+        strs1 = self.generateRandomString("abcde",6,10000)
+
+        tree = SuffixQueryTree(True,strs1)
+        self.assertEqual(tree.getStrNum(), len(strs1) )
+        
+        # test deserialize length
+        tree.zippedSerialize("temp.idx")
+        tree2 = SuffixQueryTree(True)
+        tree2.zippedDeserialize("temp.idx")
+
+        print(tree2.getStrNum())
+        self.assertEqual(tree2.getStrNum(), len(strs1) )
+
+        sf = SuffixQueryForest(3,True,3)
+
+        sf.initStringsWithCache(strs1)
+        self.assertEqual(sf.getStrNum() , len(strs1) )
+        print(sf._subNumTree)
+
+        sf.zippedSerialize("temp.idx") # same name is ok
+
+        sf2 = SuffixQueryForest(0,True,3)
+        sf2.zippedDeserialize("temp.idx")
+        self.assertEqual(sf2.getStrNum() , len(strs1) )
+        self.assertEqual(len(sf2.trees) , 3 )
+
+    def test_num_string(self):
+        "test get number of string"
+        strs1 = self.generateRandomString("abcde",6,10000)
+
+        tree = SuffixQueryTree(True,strs1)
+        self.assertEqual(tree.getStrNum(), len(strs1) )
+        
+        # test deserialize length
+        tree.zippedSerialize("temp.idx")
+        tree2 = SuffixQueryTree(True)
+        tree2.zippedDeserialize("temp.idx")
+
+        print(tree2.getStrNum())
+        self.assertEqual(tree2.getStrNum(), len(strs1) )
+
+        sf = SuffixQueryForest(3,True,3)
+
+        sf.initStringsWithCache(strs1)
+        self.assertEqual(sf.getStrNum() , len(strs1) )
+        print(sf._subNumTree)
+
+        sf.zippedSerialize("temp.idx") # same name is ok
+
+        sf2 = SuffixQueryForest(0,True,3)
+        sf2.zippedDeserialize("temp.idx")
+        self.assertEqual(sf2.getStrNum() , len(strs1) )
+        self.assertEqual(len(sf2.trees) , 3 ) 

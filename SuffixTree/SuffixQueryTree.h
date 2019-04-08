@@ -594,6 +594,10 @@ public:
 		return this->withCache;
 	}
 
+	int getStringNum() {
+		return (int)this->strNum;
+	}
+
 	virtual ~QSuffixTree() {
 		if (withCache) {
 			for (auto & i : cnodes) {
@@ -823,6 +827,5 @@ private:
 		}
 		return make_tuple(bin, histograms);
 	}
-
 
 };

@@ -356,3 +356,14 @@ extern "C" MYDLL PyObject * allString_SuffixQueryTreePy(PyObject * qtree_capsule
 	auto strs = allString_SuffixQueryTree(qtree);
 	return vectorString_toPyList(strs);
 }
+
+extern "C" MYDLL int strNum_SuffixTreePy(PyObject * tree_capsule) {
+	auto *tree = PyCapsule_GetPointer(tree_capsule, "SuffixTree");
+	return strNum_SuffixTree(tree);
+}
+
+
+extern "C" MYDLL int strNum_SuffixQueryTreePy(PyObject * qtree_capsule) {
+	auto *qtree = PyCapsule_GetPointer(qtree_capsule, "SuffixQueryTree");
+	return strNum_SuffixQueryTree(qtree);
+}

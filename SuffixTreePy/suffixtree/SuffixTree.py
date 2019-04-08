@@ -2,8 +2,8 @@ from ctypes import *
 import os
 
 if os.name == 'nt':
-    #dllpath = os.path.dirname(os.path.abspath(__file__)) + "/SuffixTreePyBinding.dll"
-    dllpath = os.path.dirname(os.path.abspath(__file__)) + "/../../x64/Release/SuffixTreePyBinding.dll"
+    dllpath = os.path.dirname(os.path.abspath(__file__)) + "/SuffixTreePyBinding.dll"
+    #dllpath = os.path.dirname(os.path.abspath(__file__)) + "/../../x64/Release/SuffixTreePyBinding.dll"
 else:
     dllpath = os.path.dirname(os.path.abspath(__file__)) + "/libSuffixTreePyBinding.so"
 
@@ -41,6 +41,9 @@ class SuffixQueryTree(object):
 
         lib.allString_SuffixQueryTreePy.argtypes = [ py_object ] # tree_capsule
         lib.allString_SuffixQueryTreePy.restype = py_object # list string
+
+        lib.strNum_SuffixQueryTreePy.argtypes = [ py_object ] # tree_capsule
+        lib.strNum_SuffixQueryTreePy.restype = c_int32 # list string
 
         #----------------------- serialize and deserialize ----------------
 
@@ -120,7 +123,10 @@ class SuffixQueryTree(object):
         return log
 
     def getStrings(self):
-        return  self.lib.allString_SuffixQueryTreePy(self.c_qtree)
+        return self.lib.allString_SuffixQueryTreePy(self.c_qtree)
+
+    def getStrNum(self):
+        return self.lib.strNum_SuffixQueryTreePy(self.c_qtree)
 
 class SuffixTree(object):
     """description of class"""
@@ -147,6 +153,9 @@ class SuffixTree(object):
 
         lib.allString_SuffixTreePy.argtypes = [ py_object ] # tree_capsule
         lib.allString_SuffixTreePy.restype = py_object # list string
+
+        lib.strNum_SuffixTreePy.argtypes = [ py_object ] # tree_capsule
+        lib.strNum_SuffixTreePy.restype = c_int32 # list string
 
 
         self.lib = lib
@@ -182,3 +191,5 @@ class SuffixTree(object):
     def findString(self,s:str):
         return self.pylib.findStringPy(self.c_tree,s)
 
+    def getStrNum(self):
+        return self.lib.strNum_SuffixTreePy(self.c_tree)

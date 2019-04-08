@@ -81,6 +81,7 @@ def test2():
 
 #test2()
 
+#from suffixtree.TestClass import *
 from suffixtree.TestClass import *
 import unittest
 unittest.main()

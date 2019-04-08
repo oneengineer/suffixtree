@@ -340,4 +340,8 @@ public:
 	int nodeSize() {
 		return (int)nodes.size();
 	}
+
+	int getStringNum() {
+		return (int)this->stringNum;
+	}
 };

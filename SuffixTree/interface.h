@@ -59,3 +59,6 @@ void readSuffixQueryTree(void * p, istream & i);
 
 vector<string> allString_SuffixQueryTree(void * qtree);
 vector<string> allString_SuffixTree(void * tree);
+
+int strNum_SuffixTree(void * tree);
+int strNum_SuffixQueryTree(void * qtree);

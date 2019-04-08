@@ -144,3 +144,13 @@ vector<string> allString_SuffixTree(void * tree) {
 	SuffixTree * p = (SuffixTree *)tree;
 	return p->getStrings();
 }
+
+int strNum_SuffixTree(void * tree) {
+	SuffixTree * p = (SuffixTree *)tree;
+	return p->getStringNum();
+}
+
+int strNum_SuffixQueryTree(void * qtree) {
+	QSuffixTree * tree = (QSuffixTree *)qtree;
+	return tree->getStringNum();
+}
