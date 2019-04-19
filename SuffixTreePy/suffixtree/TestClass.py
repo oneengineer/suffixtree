@@ -242,3 +242,86 @@ class TestClass3(unittest.TestCase):
         sf2.zippedDeserialize("temp.idx")
         self.assertEqual(sf2.getStrNum() , len(strs1) )
         self.assertEqual(len(sf2.trees) , 3 ) 
+
+
+
+
+class TestClass4(unittest.TestCase):
+    
+    def generateRandomString(self,charBase:list,length:int,num:int = 1):
+        import random
+        def a():
+            return "".join([ random.choice(charBase) for i in range(length)])
+        if num == 1:
+            return a()
+        return [a() for i in range(num)]
+        
+
+    def test_case_sensitive_wildcard2(self):
+        "test case sensitive in regular expression 2"
+        strs3 = self.generateRandomString("abc123",10,1000)
+        strs4 = self.generateRandomString("ABc123",10,1000)
+        allstr = strs3 + strs4
+        sf = SuffixQueryForest(3,True,3)
+        sf.initStringsWithCache( allstr )
+        r = RegularExpSearch(sf)
+
+        r.case_sensitive = True
+        p = ".*AB.*"
+        a1 = [i for i in allstr if "AB" in i]
+        print("length : ",len(r.searchString(p)), len(a1))
+        self.assertEqual(sorted(r.searchString(p)), sorted(a1))
+        p = ".*a1b3.*"
+        a1 = [i for i in allstr if "a1b3" in i]
+        print("length : ",len(r.searchString(p)), len(a1))
+        self.assertEqual(sorted(r.searchString(p)), sorted(a1))
+
+        r.case_sensitive = False
+        #p = ".*AB.*"
+        #a1 = [i for i in allstr if "AB" in i or "ab" in i]
+        #print("length : ",len(r.searchString(p)), len(a1))
+        #self.assertEqual(sorted(r.searchString(p)), sorted(a1))
+        p = ".*a1b.*"
+        a1 = [i for i in allstr if "a1b" in i.lower()]
+        print("length : ",len(r.searchString(p)), len(a1))
+        self.assertEqual(sorted(r.searchString(p)), sorted(a1))
+
+        p = ".*a1c.*"
+        a1 = [i for i in allstr if "a1c" in i.lower()]
+        print("length : ",len(r.searchString(p)), len(a1))
+        self.assertEqual(len(r.searchPossibleStringIdx(p)), len(a1))
+
+        #print([ (i,strs3[i]) for i in r.searchPossibleStringIdx(p)])
+        #print([ (i,strs3[i]) for i in r2.searchPossibleStringIdx(p)])
+        
+    def test_case_sensitive_wildcard_strings(self):
+        "test case sensitive in regular expression 2"
+        strs3 = self.generateRandomString("abc123",10,1000)
+        strs4 = self.generateRandomString("ABc123",10,1000)
+        allstr = strs3 + strs4
+        sf = SuffixQueryForest(3,True,3)
+        sf.initStringsWithCache( allstr )
+
+        p = "AB"
+        a1 = [i for i in allstr if "AB" in i]
+        a2 = [i for i in allstr if "ab" in i.lower()]
+        self.assertEqual(len(sf.findString(p)), len(a1))
+        self.assertEqual(len(sf.findString(p,False)), len(a2))
+
+        p = "a1b"
+        a1 = [i for i in allstr if "a1b" in i]
+        a2 = [i for i in allstr if "a1b" in i.lower()]
+        self.assertEqual(len(sf.findString(p)), len(a1))
+        self.assertEqual(len(sf.findString(p,False)), len(a2))
+
+        self.assertEqual(sorted(sf.findString(p,False)), sorted(a2))
+
+        p = "A1c"
+        a1 = [i for i in allstr if "A1c" in i]
+        a2 = [i for i in allstr if "a1c" in i.lower()]
+        self.assertEqual(len(sf.findString(p)), len(a1))
+        self.assertEqual(len(sf.findString(p,False)), len(a2))
+        
+        self.assertEqual(sorted(sf.findString(p,False)), sorted(a2))
+
+        

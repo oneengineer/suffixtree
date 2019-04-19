@@ -284,34 +284,16 @@ public:
 		return a.ch < ch;
 	}
 
-	template<bool case_sensitive>
 	int findChildren(const QTreeNode & node, int ch) const {
 		auto begin = children.begin() + node.childrenIdx;
 		auto end = begin + node.lengthChildren;
-		if (case_sensitive) {
-			auto result = lower_bound(begin, end, ch, [](const QChildren & a, const int ch) {
-				return a.ch < ch;
-			});
-			if (result == end || result->ch != ch) // not found
-				return -1;
-			return (int)(result - children.begin());
+		auto result = lower_bound(begin, end, ch, [](const QChildren & a, const int ch) {
+			return a.ch < ch;
+		});
+		if (result == end || result->ch != ch) { // not found
+			return -1;
 		}
 		else {
-			auto upper = toUpperCase(ch);
-			auto lower = toLowerCase(ch);
-			auto result = lower_bound(begin, end, upper, [](const QChildren & a, const int ch) {
-				return a.ch < ch;
-			});
-			auto upper_fail = (result == end || result->ch != upper); // not found
-			auto lower_fail = upper_fail;
-			if (upper != lower && upper_fail) {
-				result = lower_bound(begin, end, lower, [](const QChildren & a, const int ch) {
-					return a.ch < ch;
-				});
-				lower_fail = (result == end || result->ch != lower); // not found
-			}
-			if (upper_fail && lower_fail)
-				return -1;
 			return (int)(result - children.begin());
 		}
 	}
@@ -352,8 +334,22 @@ public:
 		}
 		else {
 			for (const auto & c : ch.chars) {
-				int childpos = findChildren<case_sensitive>(node, c);
-				if (childpos >= 0) result.push_back(childpos);
+				if (case_sensitive) {
+					int childpos = findChildren(node, c);
+					if (childpos >= 0) result.push_back(childpos);
+				}
+				else {
+					auto upper = toUpperCase(c);
+					auto lower = toLowerCase(c);
+					int childpos = findChildren(node, upper);
+					if (childpos >= 0) result.push_back(childpos);
+					//cout << " to find char " << (char)upper << " " << childpos << endl;
+					if (upper != lower) {
+						childpos = findChildren(node, lower);
+						if (childpos >= 0) result.push_back(childpos);
+						//cout << " to find lower char " << (char)lower << " " << childpos << endl;
+					}
+				}
 			}
 		}
 		return result;
@@ -444,7 +440,6 @@ public:
 		return result;
 	}
 
-	template<bool case_sensitive>
 	vector<int> findSubStringIdx(const string & s) {
 		set<int> resultset;
 		vector<int> result;
@@ -459,22 +454,15 @@ public:
 
 			if (edgeLen == node.lengthStr || pos == 0) {
 				if (node.isLeaf()) return result;
-				int childpos = findChildren<case_sensitive>(node, ch);
+				int childpos = findChildren(node, ch);
 				if (childpos < 0) return result;
 				pos = children[childpos].pos;
 				edgeLen = 1;
 			}
 			else {
 				auto chcmp = theString[node.start + edgeLen];
-				if (case_sensitive) { //template optimize
-					if (chcmp != ch) 
-						return result;
-				}
-				else {
-					auto lower_ch = toLowerCase(ch);
-					auto lower_chcmp = toLowerCase(chcmp);
-					if (lower_chcmp != lower_ch) 
-						return result;
+				if (chcmp != ch) {
+					return result;
 				}
 				edgeLen += 1;
 			}
@@ -492,6 +480,18 @@ public:
 		}
 		result.insert(result.begin(), resultset.begin(), resultset.end());
 		return result;
+	}
+
+	vector<int> findSubStringIdx_case_insensitive(const string & s) {
+		vector<Charset> chars;
+		// create a case insensitive charset sequence
+		for (auto c : s) {
+			auto upper = toUpperCase((int)c);
+			auto lower = toLowerCase((int)c);
+			auto charset = Charset({ upper ,lower });
+			chars.push_back(charset);
+		}
+		return findSubStringIdx_wildCard<false>(chars);
 	}
 
 	template<bool case_sensitive>
@@ -513,7 +513,13 @@ public:
 			throw runtime_error(string(" should not use this function if preserveString is false "));
 		}
 		vector<string> && result{};
-		auto idx = findSubStringIdx<case_sensitive>(s);
+		vector<int> idx;
+		if (case_sensitive) {
+			idx = findSubStringIdx(s);
+		}
+		else {
+			idx = findSubStringIdx_case_insensitive(s);
+		}
 		for (auto i : idx) {
 			result.push_back(strs[i]);
 		}

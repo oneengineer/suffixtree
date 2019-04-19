@@ -67,9 +67,9 @@ vector<string> findString(void * p, string s) {
 vector<int> findStringIdx_QTree(void * p, string s, bool case_sensitive) {
 	QSuffixTree & qtree = *(QSuffixTree *)p;
 	if (case_sensitive)
-		return qtree.findSubStringIdx<true>(s);
+		return qtree.findSubStringIdx(s);
 	else 
-		return qtree.findSubStringIdx<false>(s);
+		return qtree.findSubStringIdx_case_insensitive(s);
 }
 
 vector<string> findString_QTree(void * p, string s, bool case_sensitive) {
