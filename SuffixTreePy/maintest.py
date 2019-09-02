@@ -2,6 +2,13 @@ from suffixtree import *
 import re
 from threading import Thread
 import threading
+from memory_profiler import profile
+
+import random
+import time
+import sys
+
+charset = ['a','b','c','d','e','f','g']
 
 strs = [
 "abc",
@@ -20,12 +27,30 @@ strs = [
 "a1a",
 "b",
 "a2@",
-"wwwr"
+"wwwr",
+"AB1",
+"aBC",
+"cdD",
+"CD",
+"Cd"
 ]
 tree = SuffixQueryTree(False)
 tree.initStringsWithCache(strs)
 allstr = tree.getStrings()
 r = RegularExpSearch(tree)
+
+charset = ['a','b','c','d','e','f','g']
+def random_string(lens:int):
+     a = random.choices(charset,k=lens)
+     return "".join(a)
+
+
+def create_dataset(n:int,l:int):
+    data =[
+        random_string(random.randint(0,5) + l)
+        for _ in range(n)
+    ]
+    return data
 
 def test1():
     
@@ -50,6 +75,65 @@ def test3():
         temp += len(t)
         print(threading.get_ident(),i,len(t),len(s))
     return temp
+
+def test_simplesearch():
+    a = SimpleStringSearch(strs)
+    print(a.findString("a"))
+    print(a.findString("12"))
+    print(a.findString(["a", "b"]))
+    print(a.findString(["abc", "de"]))
+    print(a.findString(["aabbc", "de"]))
+    print(a.findString(["aabbc", "dde"]))
+    print(a.findString(["cd"]))
+    print(a.findString(["cd", "CD"]))
+    print(a.findString(["CD"]))
+
+    print("----------------------------------")
+
+    print(a.findString(["aabbc", "dde"],False))
+    print(a.findString(["cd"],False))
+    print(a.findString(["cd", "CD"],False))
+    print(a.findString(["CD"],False))
+    print(a.findString(["aB"],False))
+
+
+    print("----------------------------------")
+
+    print(a.findStringIdx("12"))
+    print(a.findStringIdx(["a", "b"]))
+    print(a.findStringIdx(["abc", "de"]))
+    print(a.findStringIdx(["aabbc", "de"]))
+    print(a.findStringIdx(["aabbc", "dde"]))
+
+@profile
+def benchmark_simplesearch():
+    import gc
+    n = 100000 * 50
+    test_n = 1000
+    data = create_dataset(n,20)
+    
+    tl0 = time.time()
+    a = SimpleStringSearch(data)
+    tl1 = time.time()
+    print("finished dataset creation")
+    testdata = create_dataset(test_n, 3)
+    num = 0
+    t0 = time.time()
+
+    print(gc.get_stats())
+    for i in testdata:
+        #print(i)
+        temp = a.findStringIdx(i)
+        num += len(temp)
+    t1 = time.time()
+    print(num)
+    ctime = t1 - t0
+    print("creation time cost", tl1 - tl0,"total time cost", ctime, " avg time ", ctime / test_n)
+    print(gc.get_stats())
+
+    sys.stdin.readline()
+
+
 
 def main():
 
@@ -81,8 +165,11 @@ def test2():
 
 #test2()
 
+test_simplesearch()
+#benchmark_simplesearch()
+
 #from suffixtree.TestClass import *
-from suffixtree.TestClass import *
-import unittest
-unittest.main()
+#from suffixtree.TestClass import *
+#import unittest
+#unittest.main()
 

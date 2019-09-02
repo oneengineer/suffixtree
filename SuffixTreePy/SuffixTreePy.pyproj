@@ -33,6 +33,9 @@
     </Compile>
     <Compile Include="setup.py" />
     <Compile Include="suffixtree\RegularExpSearch.py" />
+    <Compile Include="suffixtree\SimpleStringSearch.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="suffixtree\SuffixForest.py">
       <SubType>Code</SubType>
     </Compile>
