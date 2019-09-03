@@ -3,7 +3,7 @@ import os
 
 if os.name == 'nt':
     dllpath = os.path.dirname(os.path.abspath(__file__)) + "/SuffixTreePyBinding.dll"
-    dllpath = os.path.dirname(os.path.abspath(__file__)) + "/../../x64/Release/SuffixTreePyBinding.dll"
+    #dllpath = os.path.dirname(os.path.abspath(__file__)) + "/../../x64/Release/SuffixTreePyBinding.dll"
 else:
     dllpath = os.path.dirname(os.path.abspath(__file__)) + "/libSuffixTreePyBinding.so"
 

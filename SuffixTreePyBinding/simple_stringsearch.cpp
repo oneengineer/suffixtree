@@ -45,12 +45,13 @@ public:
 		if (!case_sensitive)
 			s = str_to_lower(s);
 		vector<string> result;
+		int c = 0;
 		for (const auto& x : (case_sensitive ? strs : lower_strs)) {
 			bool found = false;
 			found = x.find(s) != string::npos;
-			if (found) {
-				result.push_back(x);
-			}
+			if (found && case_sensitive)  result.push_back(x);
+			if (found && !case_sensitive) result.push_back(this->strs[c]);
+			c++;
 		}
 		return result;
 	}
@@ -79,6 +80,7 @@ public:
 		if (!case_sensitive)
 			transform(list_s2.begin(), list_s2.end(), list_s2.begin(), str_to_lower);
 		vector<string> result;
+		int c = 0;
 		for (const auto& x : (case_sensitive ? strs : lower_strs)) {
 			bool flag = true;
 			for (const auto& s : list_s2) {
@@ -88,7 +90,9 @@ public:
 					break;
 				}
 			}
-			if (flag) result.push_back(x);
+			if (flag && case_sensitive )  result.push_back(x);
+			if (flag && !case_sensitive ) result.push_back( this->strs[c] );
+			c++;
 		}
 		return result;
 	}

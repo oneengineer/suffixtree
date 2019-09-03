@@ -25,8 +25,8 @@ testSuffixTree: libSuffixTree.a  ../TestSuffixTree/TestSuffixTree.cpp
 	cp ../TestSuffixTree/*.txt ./
 	$(CC) $(INCLUDES) $(CXXFLAGS) $(LIBPATH) $(LIBFLAGS) ../TestSuffixTree/TestSuffixTree.cpp -o testSuffixTree
 
-libSuffixTreePyBinding.so: libSuffixTree.a ../SuffixTreePyBinding/interface_py.cpp
-	$(CC) -shared $(INCLUDES) $(CXXFLAGS) -DPy_LIMITED_API $(LIBPATH) $(LIBFLAGS) ../SuffixTreePyBinding/interface_py.cpp -o libSuffixTreePyBinding.so
+libSuffixTreePyBinding.so: libSuffixTree.a ../SuffixTreePyBinding/*.cpp
+	$(CC) -shared $(INCLUDES) $(CXXFLAGS) -DPy_LIMITED_API $(LIBPATH) $(LIBFLAGS) ../SuffixTreePyBinding/*.cpp -o libSuffixTreePyBinding.so
 
 
 python: libSuffixTreePyBinding.so

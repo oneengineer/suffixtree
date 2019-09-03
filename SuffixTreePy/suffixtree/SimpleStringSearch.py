@@ -4,10 +4,6 @@ import pathlib
 
 if os.name == 'nt':
     dllpath = os.path.dirname(os.path.abspath(__file__)) + "/SuffixTreePyBinding.dll"
-    p2 = os.path.dirname(os.path.abspath(__file__)) + r"\..\..\x64\Release\SuffixTreePyBinding.dll"
-    p3 = pathlib.Path(p2).resolve()
-    p3 = str(p3)
-    dllpath = p3
     #dllpath = os.path.dirname(os.path.abspath(__file__)) + r"\..\..\x64\Release\SuffixTreePyBinding.dll"
     
 else:

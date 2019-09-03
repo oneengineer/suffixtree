@@ -95,6 +95,8 @@ def test_simplesearch():
     print(a.findString(["cd", "CD"],False))
     print(a.findString(["CD"],False))
     print(a.findString(["aB"],False))
+    print(a.findString(["C"],False))
+    print(a.findString(["C"],True))
 
 
     print("----------------------------------")
@@ -105,7 +107,6 @@ def test_simplesearch():
     print(a.findStringIdx(["aabbc", "de"]))
     print(a.findStringIdx(["aabbc", "dde"]))
 
-@profile
 def benchmark_simplesearch():
     import gc
     n = 100000 * 50
