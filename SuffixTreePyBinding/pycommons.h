@@ -9,8 +9,9 @@ using namespace std;
 inline string pyString_toString(PyObject* s) {
 	auto* sobj = PyUnicode_AsUTF8String(s);  //automatically deref when return
 	const char* c = PyBytes_AsString(sobj);
+	string str(c);
 	Py_DECREF(sobj);
-	return string(c);
+	return str;
 }
 
 inline vector<string> listString_toVector(PyObject* list) {
